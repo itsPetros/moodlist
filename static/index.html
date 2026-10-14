@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MoodList - playlists for your moment</title>
+<meta name="description" content="Pick your mood, time of day, weather and genre. Get a playlist of popular songs.">
+<meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)">
+<meta name="color-scheme" content="dark light">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MoodList">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/static/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<noscript><p class="error" style="padding:16px">MoodList needs JavaScript to work.</p></noscript>
+
+<div class="app">
+  <section class="panel panel-left" aria-label="Choose your vibe">
+    <header class="brand">
+      <img src="/static/icons/icon-192.png" alt="" width="44" height="44">
+      <div>
+        <h1>MoodList</h1>
+        <p class="tagline">Pick your moment. Get a playlist.</p>
+      </div>
+    </header>
+
+    <fieldset class="group">
+      <legend>How are you feeling?</legend>
+      <div class="chips" id="g-mood" role="group" aria-label="Mood"></div>
+    </fieldset>
+
+    <fieldset class="group">
+      <legend>Time of day <span class="optional">optional</span></legend>
+      <div class="chips" id="g-time" role="group" aria-label="Time of day"></div>
+    </fieldset>
+
+    <fieldset class="group">
+      <legend>Weather <span class="optional">optional</span></legend>
+      <div class="chips" id="g-weather" role="group" aria-label="Weather"></div>
+    </fieldset>
+
+    <fieldset class="group">
+      <legend>Genre</legend>
+      <div class="chips" id="g-genre" role="group" aria-label="Genre"></div>
+    </fieldset>
+
+    <div class="cta">
+      <button type="button" id="go" class="primary" disabled>Create playlist</button>
+      <p id="hint" class="hint">Pick a mood to start</p>
+    </div>
+  </section>
+
+  <section class="panel panel-right" id="right" aria-label="Your playlist">
+    <div id="empty" class="card empty">
+      <p class="empty-emoji" aria-hidden="true">🎧</p>
+      <p><strong>Your playlist shows up here.</strong></p>
+      <p class="muted">Choose a mood, add the time, weather and genre if you like, then tap <em>Create playlist</em>. Nothing is saved: no account, no tracking.</p>
+    </div>
+
+    <p id="error" class="error" role="alert" hidden></p>
+
+    <div id="result" hidden>
+      <h2 id="r-title"></h2>
+      <p id="r-note" class="note" hidden></p>
+<!-- 
+      <div id="player-wrap" class="player-wrap" hidden>
+        <div class="player"><div id="player"></div></div>
+        <div class="now">
+          <div class="now-text">
+            <div id="now-title" class="now-title">Tap a song to play</div>
+            <div id="now-artist" class="now-artist muted"></div>
+          </div>
+          <div class="controls">
+            <button type="button" id="prev" class="icon-btn" aria-label="Previous song">⏮</button>
+            <button type="button" id="next" class="icon-btn" aria-label="Next song">⏭</button>
+          </div>
+        </div>
+        <p id="player-note" class="note player-note" role="status" hidden></p>
+      </div> -->
+
+      <ol id="tracks" class="tracks"></ol>
+
+      <div class="actions">
+        
+       <a id="yt-link" class="btn cta-link" href="#" target="_blank" rel="noopener noreferrer" hidden>Open as YouTube playlist ↗</a>
+
+        <button type="button" id="copy" class="btn">Copy list</button>
+        <button type="button" id="again" class="btn">Shuffle again</button>
+      </div>
+    </div>
+
+    <p id="ios-hint" class="muted small" hidden>Install it: tap Share, then <em>Add to Home Screen</em>.</p>
+  </section>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

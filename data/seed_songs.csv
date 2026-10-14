@@ -1,0 +1,331 @@
+# MoodList song catalog. One song per line, fields separated by | :
+# artist | title | genre | moods | times of day | weather
+#   genre   : pop rock hiphop rnb electronic indie folk jazz latin
+#   moods   : happy sad calm energetic focused romantic nostalgic   (comma separated, at least one)
+#   times   : morning afternoon evening night                       (comma separated, or * for any)
+#   weather : sunny cloudy rainy snowy                              (comma separated, or * for any)
+# Use "ft." for featured artists. Only well-known songs belong here: the app also checks that the
+# YouTube video has 1M+ views. Edit freely; restart the app (or run build_catalog.py) to apply.
+
+# ---------------------------------------------------------------- pop
+Pharrell Williams|Happy|pop|happy,energetic|morning,afternoon|sunny
+Katy Perry|Roar|pop|energetic,happy|morning,afternoon|*
+Katy Perry|Firework|pop|energetic,happy|*|*
+Dua Lipa|Levitating|pop|happy,energetic|afternoon,evening|sunny
+Dua Lipa|Don't Start Now|pop|energetic,happy|evening,night|*
+The Weeknd|Blinding Lights|pop|energetic,nostalgic|evening,night|*
+The Weeknd|Save Your Tears|pop|sad,nostalgic|night|rainy,cloudy
+Ed Sheeran|Shape of You|pop|happy,romantic,energetic|afternoon,evening|*
+Ed Sheeran|Perfect|pop|romantic,calm|evening,night|*
+Ed Sheeran|Thinking Out Loud|pop|romantic,calm|evening|*
+Ed Sheeran|Photograph|pop|nostalgic,sad,romantic|evening,night|*
+Adele|Someone Like You|pop|sad,nostalgic|evening,night|rainy
+Adele|Hello|pop|sad,nostalgic|evening,night|rainy,cloudy
+Adele|Rolling in the Deep|pop|energetic,sad|*|*
+Adele|Easy On Me|pop|sad,calm|evening,night|rainy,cloudy
+Billie Eilish|bad guy|pop|energetic|afternoon,night|*
+Billie Eilish|Ocean Eyes|pop|calm,romantic|night|*
+Billie Eilish|when the party's over|pop|sad,calm|night|rainy,cloudy
+Lewis Capaldi|Someone You Loved|pop|sad|evening,night|rainy
+Sam Smith|Stay With Me|pop|sad,calm|evening,night|rainy,cloudy
+Sam Smith|Too Good at Goodbyes|pop|sad|night|rainy
+Taylor Swift|Shake It Off|pop|happy,energetic|morning,afternoon|sunny
+Taylor Swift|Love Story|pop|romantic,nostalgic|afternoon,evening|*
+Taylor Swift|Anti-Hero|pop|sad,energetic|night|*
+Taylor Swift|Blank Space|pop|energetic,happy|afternoon,evening|*
+Harry Styles|As It Was|pop|nostalgic,energetic|afternoon,evening|*
+Harry Styles|Watermelon Sugar|pop|happy,romantic|afternoon|sunny
+Olivia Rodrigo|drivers license|pop|sad|night|rainy,cloudy
+Olivia Rodrigo|good 4 u|pop|energetic|afternoon|*
+Justin Timberlake|Can't Stop the Feeling!|pop|happy,energetic|morning,afternoon|sunny
+Mark Ronson ft. Bruno Mars|Uptown Funk|pop|happy,energetic|afternoon,evening|*
+Bruno Mars|Just the Way You Are|pop|romantic,happy|evening|*
+Bruno Mars|When I Was Your Man|pop|sad|night|rainy
+Bruno Mars|Locked Out of Heaven|pop|energetic,romantic|evening,night|*
+Maroon 5|Sugar|pop|happy,romantic|afternoon|sunny
+Maroon 5|Memories|pop|sad,nostalgic|evening,night|rainy,cloudy
+Coldplay|A Sky Full of Stars|pop|happy,energetic|evening,night|*
+OneRepublic|Counting Stars|pop|happy,energetic|afternoon|*
+Lady Gaga ft. Bradley Cooper|Shallow|pop|romantic,sad|evening,night|*
+Lady Gaga|Poker Face|pop|energetic|evening,night|*
+Rihanna|Diamonds|pop|romantic,calm|night|*
+Rihanna ft. Jay-Z|Umbrella|pop|romantic,sad|*|rainy
+Ariana Grande|thank u, next|pop|happy,energetic|afternoon|*
+Ariana Grande|7 rings|pop|energetic,happy|*|*
+Shawn Mendes|Stitches|pop|sad|night|rainy
+Charlie Puth ft. Wiz Khalifa|See You Again|pop|sad,nostalgic|*|rainy,cloudy
+Miley Cyrus|Flowers|pop|happy,energetic|morning,afternoon|sunny
+Tones and I|Dance Monkey|pop|happy,energetic|afternoon|*
+Lizzo|Good as Hell|pop|happy,energetic|morning,afternoon|sunny
+Doja Cat|Say So|pop|happy,energetic|afternoon|*
+Camila Cabello ft. Young Thug|Havana|pop|happy,energetic|evening,night|*
+Sia|Chandelier|pop|sad,energetic|night|*
+Sia|Cheap Thrills|pop|happy,energetic|afternoon|sunny
+Selena Gomez|Lose You to Love Me|pop|sad|night|rainy
+Christina Perri|A Thousand Years|pop|romantic,calm|evening|*
+Mariah Carey|All I Want for Christmas Is You|pop|happy,romantic|*|snowy
+Wham!|Last Christmas|pop|nostalgic,happy|*|snowy
+Michael Jackson|Billie Jean|pop|energetic,nostalgic|evening,night|*
+Michael Jackson|Beat It|pop|energetic,nostalgic|afternoon|*
+Michael Jackson|Thriller|pop|energetic,nostalgic|night|*
+Whitney Houston|I Wanna Dance with Somebody|pop|happy,energetic,nostalgic|morning,afternoon|sunny
+Whitney Houston|I Will Always Love You|pop|sad,romantic|evening,night|*
+Madonna|Like a Prayer|pop|energetic,nostalgic|*|*
+Cyndi Lauper|Girls Just Want to Have Fun|pop|happy,nostalgic|morning,afternoon|sunny
+Tears for Fears|Everybody Wants to Rule the World|pop|nostalgic,calm|afternoon,evening|*
+Rick Astley|Never Gonna Give You Up|pop|happy,nostalgic|morning,afternoon|*
+Backstreet Boys|I Want It That Way|pop|nostalgic,romantic|evening|*
+NSYNC|Bye Bye Bye|pop|energetic,nostalgic|afternoon|*
+Britney Spears|Toxic|pop|energetic|night|*
+Britney Spears|...Baby One More Time|pop|nostalgic,energetic|afternoon|*
+Spice Girls|Wannabe|pop|happy,nostalgic|morning,afternoon|sunny
+Celine Dion|My Heart Will Go On|pop|sad,romantic|night|*
+Natasha Bedingfield|Unwritten|pop|happy,calm|morning|sunny
+George Michael|Careless Whisper|pop|romantic,sad,nostalgic|night|*
+Elvis Presley|Can't Help Falling in Love|pop|romantic,calm|evening,night|*
+Lukas Graham|7 Years|pop|nostalgic,sad|*|*
+ABBA|Dancing Queen|pop|happy,nostalgic,energetic|afternoon,evening|*
+ABBA|Mamma Mia|pop|happy,nostalgic|morning,afternoon|sunny
+Bee Gees|Stayin' Alive|pop|energetic,nostalgic|*|*
+
+# ---------------------------------------------------------------- rock
+Queen|Bohemian Rhapsody|rock|nostalgic,energetic|evening,night|*
+Queen|Don't Stop Me Now|rock|happy,energetic|morning,afternoon|sunny
+Queen|Somebody to Love|rock|happy,nostalgic|afternoon|*
+Queen|We Will Rock You|rock|energetic|*|*
+Nirvana|Smells Like Teen Spirit|rock|energetic|afternoon,night|*
+Guns N' Roses|Sweet Child O' Mine|rock|nostalgic,energetic|afternoon,evening|*
+Guns N' Roses|November Rain|rock|sad,nostalgic|night|rainy
+Led Zeppelin|Stairway to Heaven|rock|nostalgic,calm|evening,night|*
+AC/DC|Back in Black|rock|energetic|*|*
+AC/DC|Highway to Hell|rock|energetic|*|*
+Eagles|Hotel California|rock|nostalgic,calm|evening,night|*
+Linkin Park|In the End|rock|sad,nostalgic,energetic|*|*
+Linkin Park|Numb|rock|sad|night|rainy,cloudy
+Green Day|Boulevard of Broken Dreams|rock|sad,nostalgic|night|rainy,cloudy
+Green Day|Wake Me Up When September Ends|rock|sad,nostalgic|evening|rainy
+Oasis|Wonderwall|rock|nostalgic,calm|evening|cloudy,rainy
+Oasis|Don't Look Back in Anger|rock|nostalgic,calm|evening|cloudy,rainy
+The Killers|Mr. Brightside|rock|energetic,nostalgic|night|*
+Red Hot Chili Peppers|Under the Bridge|rock|sad,nostalgic|evening|*
+Red Hot Chili Peppers|Californication|rock|calm,nostalgic|afternoon|sunny
+Red Hot Chili Peppers|Can't Stop|rock|energetic|*|*
+Metallica|Nothing Else Matters|rock|sad,calm,romantic|night|*
+Metallica|Enter Sandman|rock|energetic|night|*
+Bon Jovi|Livin' on a Prayer|rock|energetic,nostalgic|*|*
+Bon Jovi|It's My Life|rock|energetic|*|*
+Journey|Don't Stop Believin'|rock|happy,nostalgic|*|*
+Foo Fighters|The Pretender|rock|energetic|*|*
+Pink Floyd|Wish You Were Here|rock|sad,calm,nostalgic|night|*
+Pink Floyd|Comfortably Numb|rock|calm,nostalgic|night|*
+The Beatles|Hey Jude|rock|calm,nostalgic|*|*
+The Beatles|Let It Be|rock|calm,sad|evening|cloudy
+The Beatles|Here Comes the Sun|rock|happy,calm|morning|sunny
+U2|With or Without You|rock|romantic,sad|night|*
+Fleetwood Mac|Dreams|rock|calm,nostalgic|afternoon,evening|*
+Creedence Clearwater Revival|Have You Ever Seen the Rain?|rock|sad,nostalgic|*|rainy
+Coldplay|Viva La Vida|rock|energetic,nostalgic|afternoon|*
+Coldplay|Yellow|rock|calm,romantic|evening,night|*
+Coldplay|Fix You|rock|sad,calm|night|rainy,cloudy
+The Cranberries|Zombie|rock|sad,energetic|*|*
+Aerosmith|I Don't Want to Miss a Thing|rock|romantic,sad|night|*
+Dire Straits|Sultans of Swing|rock|nostalgic,calm|afternoon|*
+Survivor|Eye of the Tiger|rock|energetic|morning,afternoon|*
+Europe|The Final Countdown|rock|energetic,nostalgic|*|*
+Deep Purple|Smoke on the Water|rock|energetic,nostalgic|*|*
+Scorpions|Wind of Change|rock|nostalgic,calm|evening|*
+Foo Fighters|Everlong|rock|focused,energetic,nostalgic|*|*
+Coldplay|Clocks|rock|focused,calm,nostalgic|evening,night|*
+Muse|Time Is Running Out|rock|energetic,focused|night|*
+Imagine Dragons|Believer|rock|energetic|*|*
+Imagine Dragons|Radioactive|rock|energetic|*|*
+Imagine Dragons|Thunder|rock|energetic,happy|*|*
+Imagine Dragons|Demons|rock|sad,calm|night|rainy,cloudy
+Maneskin|Beggin'|rock|energetic|*|*
+Avril Lavigne|Complicated|rock|nostalgic,energetic|afternoon|*
+Evanescence|Bring Me to Life|rock|energetic,sad|night|*
+The Rolling Stones|Paint It, Black|rock|energetic,sad|night|*
+The Police|Every Breath You Take|rock|romantic,nostalgic|evening,night|*
+
+# ---------------------------------------------------------------- hip-hop
+Eminem|Lose Yourself|hiphop|energetic,focused|morning,afternoon|*
+Eminem|Not Afraid|hiphop|energetic|*|*
+Eminem|Till I Collapse|hiphop|focused,energetic|*|*
+Eminem ft. Rihanna|Love the Way You Lie|hiphop|sad,energetic|night|*
+Kendrick Lamar|HUMBLE.|hiphop|energetic|*|*
+Drake|God's Plan|hiphop|happy,calm|afternoon|*
+Drake|Hotline Bling|hiphop|calm,nostalgic|night|*
+Travis Scott|SICKO MODE|hiphop|energetic|night|*
+Kanye West|Stronger|hiphop|energetic|morning,afternoon|*
+Kanye West|Heartless|hiphop|sad|night|rainy
+Jay-Z ft. Alicia Keys|Empire State of Mind|hiphop|energetic,nostalgic|evening|*
+Dr. Dre ft. Snoop Dogg|Still D.R.E.|hiphop|nostalgic,energetic|afternoon|sunny
+50 Cent|In Da Club|hiphop|energetic,nostalgic|night|*
+Lil Nas X|Old Town Road|hiphop|happy|afternoon|sunny
+Juice WRLD|Lucid Dreams|hiphop|sad|night|rainy
+XXXTENTACION|SAD!|hiphop|sad|night|rainy
+Kid Cudi|Day 'n' Nite|hiphop|calm,sad|night|*
+Outkast|Hey Ya!|hiphop|happy,energetic|afternoon|sunny
+Cardi B|Bodak Yellow|hiphop|energetic|*|*
+Mac Miller|Self Care|hiphop|calm,focused|night|*
+Wiz Khalifa|Black and Yellow|hiphop|energetic|*|*
+2Pac ft. Dr. Dre|California Love|hiphop|energetic,nostalgic|afternoon|sunny
+The Notorious B.I.G.|Juicy|hiphop|nostalgic,calm|afternoon|sunny
+Nelly|Hot in Herre|hiphop|energetic,nostalgic|night|*
+Macklemore & Ryan Lewis|Can't Hold Us|hiphop|energetic|morning|*
+Post Malone|Circles|hiphop|sad,calm|night|rainy,cloudy
+Post Malone ft. Swae Lee|Sunflower|hiphop|happy,calm|afternoon|sunny
+
+# ---------------------------------------------------------------- r&b and soul
+Stevie Wonder|Isn't She Lovely|rnb|happy,romantic|morning|sunny
+Stevie Wonder|Sir Duke|rnb|happy,energetic|morning|sunny
+Marvin Gaye|Let's Get It On|rnb|romantic|night|*
+Marvin Gaye|What's Going On|rnb|calm,nostalgic|afternoon|*
+Bill Withers|Ain't No Sunshine|rnb|sad,calm|*|rainy
+Bill Withers|Lovely Day|rnb|happy,calm|morning|sunny
+Otis Redding|(Sittin' On) The Dock of the Bay|rnb|calm,nostalgic|afternoon|*
+Al Green|Let's Stay Together|rnb|romantic|evening|*
+Amy Winehouse|Back to Black|rnb|sad|night|rainy
+Amy Winehouse|Rehab|rnb|energetic,nostalgic|afternoon|*
+Alicia Keys|Fallin'|rnb|sad,romantic|night|*
+Alicia Keys|No One|rnb|romantic,calm|evening|*
+Beyonce|Halo|rnb|romantic|evening|*
+Beyonce|Crazy in Love|rnb|energetic,happy|*|*
+John Legend|All of Me|rnb|romantic,calm|evening,night|*
+The Weeknd|Starboy|rnb|energetic|night|*
+SZA|Kill Bill|rnb|sad,romantic|night|*
+Frank Ocean|Thinkin Bout You|rnb|sad,romantic|night|*
+Daniel Caesar ft. H.E.R.|Best Part|rnb|romantic,calm|evening,night|*
+Etta James|At Last|rnb|romantic|evening|*
+Joji|Slow Dancing in the Dark|rnb|sad|night|rainy
+Joji|Glimpse of Us|rnb|sad,romantic|night|rainy
+Sam Cooke|A Change Is Gonna Come|rnb|calm,sad,nostalgic|evening|*
+Aretha Franklin|Respect|rnb|energetic,happy,nostalgic|afternoon|*
+James Brown|I Got You (I Feel Good)|rnb|happy,energetic|morning|sunny
+Earth, Wind & Fire|September|rnb|happy,nostalgic,energetic|morning,afternoon|sunny
+Kool & The Gang|Celebration|rnb|happy,energetic|*|*
+Prince|Purple Rain|rnb|sad,nostalgic|night|rainy
+Gnarls Barkley|Crazy|rnb|calm,nostalgic|evening|*
+Ben E. King|Stand by Me|rnb|romantic,nostalgic|afternoon|*
+
+# ---------------------------------------------------------------- electronic
+Daft Punk ft. Pharrell Williams|Get Lucky|electronic|happy,romantic|afternoon,evening|sunny
+Daft Punk|One More Time|electronic|happy,energetic|*|*
+Daft Punk|Harder, Better, Faster, Stronger|electronic|energetic,focused|*|*
+Avicii|Wake Me Up|electronic|happy,energetic|morning,afternoon|sunny
+Avicii|Levels|electronic|energetic|night|*
+Avicii|The Nights|electronic|nostalgic,happy|evening|*
+Calvin Harris|Summer|electronic|happy,energetic|afternoon|sunny
+Calvin Harris ft. Rihanna|This Is What You Came For|electronic|energetic,romantic|night|*
+Calvin Harris|Feel So Close|electronic|happy,energetic|afternoon|sunny
+Rihanna ft. Calvin Harris|We Found Love|electronic|energetic,happy|night|*
+David Guetta ft. Sia|Titanium|electronic|energetic,sad|*|*
+Swedish House Mafia|Don't You Worry Child|electronic|nostalgic,energetic|evening|*
+Martin Garrix|Animals|electronic|energetic|night|*
+Alan Walker|Faded|electronic|sad,calm|night|rainy,cloudy
+Marshmello ft. Bastille|Happier|electronic|sad,nostalgic|night|rainy
+The Chainsmokers ft. Halsey|Closer|electronic|nostalgic,romantic|evening,night|*
+Kygo ft. Conrad Sewell|Firestone|electronic|happy,calm|afternoon|sunny
+Zedd ft. Foxes|Clarity|electronic|energetic,sad|night|*
+Disclosure ft. Sam Smith|Latch|electronic|romantic,happy|night|*
+Deadmau5 ft. Chris James|Strobe|electronic|focused,calm|night|*
+Darude|Sandstorm|electronic|energetic|*|*
+Robin Schulz|Prayer in C|electronic|happy,calm|afternoon|sunny
+Lost Frequencies|Are You with Me|electronic|happy,calm|afternoon|sunny
+Eiffel 65|Blue (Da Ba Dee)|electronic|happy,nostalgic|afternoon|*
+Tiesto|The Business|electronic|energetic,focused|*|*
+Avicii|Hey Brother|electronic|nostalgic,happy|evening|*
+Moby|Porcelain|electronic|calm,focused|night|*
+Moby|Extreme Ways|electronic|focused,energetic|*|*
+Massive Attack|Teardrop|electronic|focused,calm,sad|night|rainy,cloudy
+Daft Punk|Around the World|electronic|focused,energetic|*|*
+Kavinsky|Nightcall|electronic|focused,nostalgic|night|*
+
+# ---------------------------------------------------------------- indie and alternative
+MGMT|Electric Feel|indie|happy,energetic|afternoon,night|*
+MGMT|Kids|indie|nostalgic,energetic|*|*
+Foster the People|Pumped Up Kicks|indie|happy,nostalgic|afternoon|sunny
+Tame Impala|The Less I Know the Better|indie|energetic|night|*
+Tame Impala|Let It Happen|indie|focused,energetic|*|*
+The xx|Intro|indie|focused,calm|*|*
+Radiohead|Creep|indie|sad|night|*
+Radiohead|No Surprises|indie|calm,sad|evening|rainy,cloudy
+Lana Del Rey|Summertime Sadness|indie|sad,nostalgic|evening,night|*
+Lana Del Rey|Video Games|indie|sad,romantic|night|*
+Lorde|Royals|indie|calm|*|*
+Glass Animals|Heat Waves|indie|nostalgic,calm|evening,night|*
+Cigarettes After Sex|Apocalypse|indie|calm,romantic|night|rainy,cloudy
+Of Monsters and Men|Little Talks|indie|happy,energetic|*|*
+Hozier|Take Me to Church|indie|sad,energetic|night|*
+Gotye ft. Kimbra|Somebody That I Used to Know|indie|sad,nostalgic|*|*
+Arctic Monkeys|Do I Wanna Know?|indie|focused,calm|night|*
+Arctic Monkeys|R U Mine?|indie|energetic|night|*
+Arctic Monkeys|505|indie|nostalgic,calm|night|*
+The Neighbourhood|Sweater Weather|indie|calm,romantic|evening,night|snowy,cloudy
+Walk the Moon|Shut Up and Dance|indie|happy,energetic|afternoon|*
+Capital Cities|Safe and Sound|indie|happy,energetic|afternoon|*
+Twenty One Pilots|Stressed Out|indie|sad,nostalgic|*|*
+Passenger|Let Her Go|indie|sad,calm|evening,night|rainy
+
+# ---------------------------------------------------------------- acoustic and reggae
+Jack Johnson|Banana Pancakes|folk|calm,happy|morning|sunny
+Jack Johnson|Better Together|folk|romantic,calm|morning,evening|*
+Jason Mraz|I'm Yours|folk|happy,romantic|afternoon|sunny
+Bob Marley & The Wailers|Three Little Birds|folk|happy,calm|morning|sunny
+Bob Marley & The Wailers|No Woman, No Cry|folk|sad,nostalgic|evening|*
+Bob Marley & The Wailers|Is This Love|folk|romantic|evening|*
+Simon & Garfunkel|The Sound of Silence|folk|sad,calm|night|*
+Simon & Garfunkel|Bridge over Troubled Water|folk|calm,sad|evening|*
+Leonard Cohen|Hallelujah|folk|sad,calm|night|*
+Johnny Cash|Hurt|folk|sad|night|*
+Tracy Chapman|Fast Car|folk|sad,nostalgic|*|*
+Bon Iver|Skinny Love|folk|sad,calm|*|rainy,cloudy,snowy
+Vance Joy|Riptide|folk|happy|afternoon|sunny
+The Lumineers|Ho Hey|folk|happy|afternoon|sunny
+Mumford & Sons|I Will Wait|folk|energetic,nostalgic|*|*
+John Denver|Take Me Home, Country Roads|folk|nostalgic,happy,calm|afternoon|sunny
+Bob Dylan|Knockin' on Heaven's Door|folk|calm,sad|evening|*
+
+# ---------------------------------------------------------------- jazz and classical
+Nina Simone|Feeling Good|jazz|happy,calm|morning|sunny
+Louis Armstrong|What a Wonderful World|jazz|calm,happy|morning|sunny
+Frank Sinatra|Fly Me to the Moon|jazz|romantic,calm|evening,night|*
+Norah Jones|Don't Know Why|jazz|calm,sad|evening|rainy
+Dave Brubeck|Take Five|jazz|focused,calm|afternoon|*
+Miles Davis|So What|jazz|focused,calm|night|*
+Chet Baker|My Funny Valentine|jazz|romantic,sad,calm|night|*
+Bill Evans|Waltz for Debby|jazz|calm,focused|night|*
+Ludovico Einaudi|Nuvole Bianche|jazz|calm,focused|*|rainy,cloudy
+Ludovico Einaudi|Experience|jazz|focused,energetic|*|*
+Ludovico Einaudi|I Giorni|jazz|calm,nostalgic|*|rainy
+Claude Debussy|Clair de Lune|jazz|calm,romantic|night|*
+Ludwig van Beethoven|Fur Elise|jazz|calm,focused|*|*
+Ludwig van Beethoven|Moonlight Sonata|jazz|calm,sad|night|*
+Hans Zimmer|Time|jazz|focused,calm,sad|night|*
+Hans Zimmer|Cornfield Chase|jazz|focused,calm|*|*
+Hans Zimmer|Now We Are Free|jazz|focused,calm|*|*
+Hans Zimmer|Dream Is Collapsing|jazz|focused,energetic|*|*
+Clint Mansell|Lux Aeterna|jazz|focused,sad,energetic|night|*
+Yiruma|River Flows in You|jazz|calm,romantic|evening|*
+Max Richter|On the Nature of Daylight|jazz|sad,calm|night|rainy
+Johann Pachelbel|Canon in D|jazz|calm,romantic|*|*
+Wolfgang Amadeus Mozart|Eine Kleine Nachtmusik|jazz|happy,focused|morning|*
+Erik Satie|Gymnopedie No. 1|jazz|calm,sad|night|rainy
+Edvard Grieg|In the Hall of the Mountain King|jazz|energetic,focused|*|*
+Joe Hisaishi|One Summer's Day|jazz|calm,nostalgic|afternoon|*
+Vangelis|Chariots of Fire|jazz|energetic,focused|morning|*
+
+# ---------------------------------------------------------------- latin
+Luis Fonsi ft. Daddy Yankee|Despacito|latin|happy,energetic|afternoon,evening|sunny
+Shakira|Hips Don't Lie|latin|energetic,happy|night|*
+Shakira|Waka Waka (This Time for Africa)|latin|happy,energetic|*|sunny
+Shakira|Whenever, Wherever|latin|romantic,energetic|*|*
+Enrique Iglesias|Bailando|latin|happy,energetic|*|sunny
+Bad Bunny|Titi Me Pregunto|latin|energetic|night|*
+Ricky Martin|Livin' la Vida Loca|latin|energetic,nostalgic|*|*
+Gipsy Kings|Bamboleo|latin|happy,energetic|afternoon|sunny
+Daddy Yankee|Gasolina|latin|energetic,nostalgic|night|*
+J Balvin & Willy William|Mi Gente|latin|energetic,happy|*|*
+Marc Anthony|Vivir Mi Vida|latin|happy,energetic|*|*
+Carlos Santana ft. Rob Thomas|Smooth|latin|nostalgic,romantic|evening|*
+Juanes|La Camisa Negra|latin|energetic,sad|*|*
