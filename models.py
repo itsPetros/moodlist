@@ -1,21 +1,22 @@
-import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, ARRAY, Text
+import uuid
+from database import Base
+from sqlalchemy import ARRAY, Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from database import Base
+
 
 class User(Base):
     __tablename__ = "users"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     username = Column(String(50), unique=True, nullable=False, index=True)
     email = Column(String(255), unique=True, nullable=False, index=True)
-    hashed_password = Column(String(255), nullable=True)
+    hashed_password = Column(String(255), nullable=True)  # Nullable for Google OAuth
     profile_picture_url = Column(String(500), nullable=True)
     
-    # Verification details (signup & password resets)
-    is_verified = Column(Boolean, default=False)
+    is_verified = Column(Boolean, default=True)
     verification_code = Column(String(6), nullable=True)
     verification_expires_at = Column(DateTime, nullable=True)
 
@@ -29,6 +30,7 @@ class User(Base):
 
 class SavedPlaylist(Base):
     __tablename__ = "saved_playlists"
+    __table_args__ = {'extend_existing': True}
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)

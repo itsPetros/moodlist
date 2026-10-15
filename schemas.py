@@ -4,7 +4,6 @@ from typing import List, Optional
 from uuid import UUID
 from pydantic import BaseModel, EmailStr, Field, validator
 
-# Helper password validation function
 def validate_password_complexity(value: str) -> str:
     if len(value) < 8:
         raise ValueError("Password must be at least 8 characters long.")
@@ -19,7 +18,6 @@ def validate_password_complexity(value: str) -> str:
     return value
 
 
-# --- Auth & Profile Schemas ---
 class UserRegister(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
     email: EmailStr
@@ -66,7 +64,6 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: Optional[str] = None
 
-# --- Playlist Schemas ---
 class PlaylistCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=100)
     mood: str

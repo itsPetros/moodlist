@@ -3,104 +3,172 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>MoodList - playlists for your moment</title>
-<meta name="description" content="Pick your mood, time of day, weather and genre. Get a playlist of popular songs.">
-<meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)">
-<meta name="color-scheme" content="dark light">
-<meta name="referrer" content="strict-origin-when-cross-origin">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="MoodList">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" type="image/png" href="/static/icons/icon-192.png">
-<link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+<title>MoodList</title>
 <link rel="stylesheet" href="/static/style.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="/static/app.js"></script>
 </head>
 <body>
 <noscript><p class="error" style="padding:16px">MoodList needs JavaScript to work.</p></noscript>
 
-<div class="app">
-  <section class="panel panel-left" aria-label="Choose your vibe">
-    <header class="brand">
-      <img src="/static/icons/icon-192.png" alt="" width="44" height="44">
-      <div>
-        <h1>MoodList</h1>
-        <p class="tagline">Pick your moment. Get a playlist.</p>
+<!-- 1. AUTHENTICATION SCREEN -->
+<div id="auth-screen" class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <img src="/static/icons/icon-192.png" alt="MoodList" width="48" height="48">
+      <h2>Welcome to MoodList</h2>
+      <p id="auth-subtitle">Log in to generate and save custom playlists</p>
+    </div>
+
+    <!-- Login Form -->
+    <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+      <div class="field-group">
+        <label for="login-username">Username</label>
+        <input type="text" id="login-username" class="auth-input" required />
       </div>
-    </header>
-
-    <fieldset class="group">
-      <legend>How are you feeling?</legend>
-      <div class="chips" id="g-mood" role="group" aria-label="Mood"></div>
-    </fieldset>
-
-    <fieldset class="group">
-      <legend>Time of day <span class="optional">optional</span></legend>
-      <div class="chips" id="g-time" role="group" aria-label="Time of day"></div>
-    </fieldset>
-
-    <fieldset class="group">
-      <legend>Weather <span class="optional">optional</span></legend>
-      <div class="chips" id="g-weather" role="group" aria-label="Weather"></div>
-    </fieldset>
-
-    <fieldset class="group">
-      <legend>Genre</legend>
-      <div class="chips" id="g-genre" role="group" aria-label="Genre"></div>
-    </fieldset>
-
-    <div class="cta">
-      <button type="button" id="go" class="primary" disabled>Create playlist</button>
-      <p id="hint" class="hint">Pick a mood to start</p>
-    </div>
-  </section>
-
-  <section class="panel panel-right" id="right" aria-label="Your playlist">
-    <div id="empty" class="card empty">
-      <p class="empty-emoji" aria-hidden="true">🎧</p>
-      <p><strong>Your playlist shows up here.</strong></p>
-      <p class="muted">Choose a mood, add the time, weather and genre if you like, then tap <em>Create playlist</em>. Nothing is saved: no account, no tracking.</p>
-    </div>
-
-    <p id="error" class="error" role="alert" hidden></p>
-
-    <div id="result" hidden>
-      <h2 id="r-title"></h2>
-      <p id="r-note" class="note" hidden></p>
-<!-- 
-      <div id="player-wrap" class="player-wrap" hidden>
-        <div class="player"><div id="player"></div></div>
-        <div class="now">
-          <div class="now-text">
-            <div id="now-title" class="now-title">Tap a song to play</div>
-            <div id="now-artist" class="now-artist muted"></div>
-          </div>
-          <div class="controls">
-            <button type="button" id="prev" class="icon-btn" aria-label="Previous song">⏮</button>
-            <button type="button" id="next" class="icon-btn" aria-label="Next song">⏭</button>
-          </div>
+      <div class="field-group">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" class="auth-input" required />
+      </div>
+      <button type="submit" class="auth-btn-primary">Log In</button>
+      
+      <div style="margin: 16px 0; text-align: center;">
+        <div id="g_id_onload"
+             data-client_id="485385334902-is5ja9oc48gaav7hf1k1ml21744lrjv3.apps.googleusercontent.com"
+             data-callback="handleGoogleSignIn">
         </div>
-        <p id="player-note" class="note player-note" role="status" hidden></p>
-      </div> -->
-
-      <ol id="tracks" class="tracks"></ol>
-
-      <div class="actions">
-        
-       <a id="yt-link" class="btn cta-link" href="#" target="_blank" rel="noopener noreferrer" hidden>Open as YouTube playlist ↗</a>
-
-        <button type="button" id="copy" class="btn">Copy list</button>
-        <button type="button" id="again" class="btn">Shuffle again</button>
+        <div class="g_id_signin" 
+             data-type="standard" 
+             data-size="large" 
+             data-theme="outline" 
+             data-text="sign_in_with">
+        </div>
       </div>
-    </div>
 
-    <p id="ios-hint" class="muted small" hidden>Install it: tap Share, then <em>Add to Home Screen</em>.</p>
-  </section>
+      <p class="auth-switch">Need an account? <a href="#" onclick="switchAuthTab('signup')">Sign Up</a></p>
+      <p class="auth-switch"><a href="#" onclick="switchAuthTab('forgot')">Forgot Password?</a></p>
+    </form>
+
+    <!-- Signup Form -->
+    <form id="signup-form" class="auth-form hidden" onsubmit="handleSignup(event)">
+      <div class="field-group">
+        <label for="signup-username">Username</label>
+        <input type="text" id="signup-username" class="auth-input" required />
+      </div>
+      <div class="field-group">
+        <label for="signup-email">Email</label>
+        <input type="email" id="signup-email" class="auth-input" required />
+      </div>
+      <button type="submit" class="auth-btn-primary">Sign Up with Email</button>
+      <p class="auth-switch">Already have an account? <a href="#" onclick="switchAuthTab('login')">Log In</a></p>
+    </form>
+
+    <!-- Verification & Password Setup -->
+    <form id="verify-form" class="auth-form hidden" onsubmit="handleVerifyAndSetPassword(event)">
+      <div class="field-group">
+        <label for="verify-code">6-Digit Verification Code</label>
+        <input type="text" id="verify-code" class="auth-input" maxlength="6" required />
+      </div>
+      <div class="field-group">
+        <label for="signup-password">Create Password</label>
+        <input type="password" id="signup-password" class="auth-input" placeholder="8+ chars" required />
+      </div>
+      <button type="submit" class="auth-btn-primary">Complete Setup & Log In</button>
+    </form>
+
+    <!-- Forgot Password -->
+    <form id="forgot-form" class="auth-form hidden" onsubmit="handleForgotPassword(event)">
+      <div class="field-group">
+        <label for="forgot-email">Account Email</label>
+        <input type="email" id="forgot-email" class="auth-input" required />
+      </div>
+      <button type="submit" class="auth-btn-primary">Send Reset Code</button>
+      <p class="auth-switch"><a href="#" onclick="switchAuthTab('login')">Back to Log In</a></p>
+    </form>
+
+    <!-- Reset Password -->
+    <form id="reset-form" class="auth-form hidden" onsubmit="handleResetPassword(event)">
+      <div class="field-group">
+        <label for="reset-code">Reset Code</label>
+        <input type="text" id="reset-code" class="auth-input" maxlength="6" required />
+      </div>
+      <div class="field-group">
+        <label for="reset-new-password">New Password</label>
+        <input type="password" id="reset-new-password" class="auth-input" required />
+      </div>
+      <button type="submit" class="auth-btn-primary">Reset Password</button>
+    </form>
+  </div>
+</div>
+
+<!-- 2. MAIN APPLICATION SCREEN -->
+<div id="main-app-screen" class="hidden">
+  <header class="app-header">
+    <div class="brand" style="display:flex; align-items:center; gap:10px;">
+      <img src="/static/icons/icon-192.png" alt="" width="32" height="32">
+      <h2 style="font-size:1.2rem; margin:0;">MoodList</h2>
+    </div>
+    <div id="user-nav" class="user-badge"></div>
+  </header>
+
+  <div class="app">
+    <section class="panel panel-left" aria-label="Choose your vibe">
+      <fieldset class="group">
+        <legend>How are you feeling?</legend>
+        <div class="chips" id="g-mood" role="group" aria-label="Mood"></div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Time of day <span class="optional">optional</span></legend>
+        <div class="chips" id="g-time" role="group" aria-label="Time of day"></div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Weather <span class="optional">optional</span></legend>
+        <div class="chips" id="g-weather" role="group" aria-label="Weather"></div>
+      </fieldset>
+
+      <fieldset class="group">
+        <legend>Genre</legend>
+        <div class="chips" id="g-genre" role="group" aria-label="Genre"></div>
+      </fieldset>
+
+      <div class="cta">
+        <button type="button" id="go" class="primary" disabled>Create playlist</button>
+        <p id="hint" class="hint">Pick a mood to start</p>
+      </div>
+    </section>
+
+    <section class="panel panel-right" id="right" aria-label="Your playlist">
+      <div id="empty" class="card empty">
+        <p class="empty-emoji" aria-hidden="true">🎧</p>
+        <p><strong>Your playlist shows up here.</strong></p>
+        <p class="muted">Choose options on the left and tap <em>Create playlist</em>.</p>
+      </div>
+
+      <p id="error" class="error" role="alert" hidden></p>
+
+      <div id="result" hidden>
+        <h2 id="r-title"></h2>
+        <p id="r-note" class="note" hidden></p>
+        <ol id="tracks" class="tracks"></ol>
+
+        <div class="actions">
+          <a id="yt-link" class="btn cta-link" href="#" target="_blank" rel="noopener noreferrer" hidden>Open as YouTube playlist ↗</a>
+        </div>
+
+        <div id="save-playlist-container" style="margin-top:20px; padding:16px; background:rgba(255,255,255,0.03); border-radius:10px; display:flex; gap:10px; align-items:center;">
+          <input type="text" id="playlist-title-input" class="auth-input" placeholder="Name this playlist..." style="flex:1;" />
+          <label style="font-size:0.85rem; display:flex; align-items:center; gap:4px;">
+            <input type="checkbox" id="playlist-public-checkbox" checked /> Public
+          </label>
+          <button type="button" class="btn primary" onclick="saveCurrentPlaylist()">Save Playlist</button>
+        </div>
+      </div>
+    </section>
+  </div>
 </div>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script src="/static/app.js"></script>
 </body>
 </html>
