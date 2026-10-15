@@ -1,0 +1,66 @@
+<!-- Navigation / User Profile Header -->
+<header class="app-header">
+  <div id="user-nav" class="user-nav">
+    <!-- Rendered dynamically by JavaScript -->
+    <button id="auth-btn" onclick="openAuthModal('login')">Log In / Sign Up</button>
+  </div>
+</header>
+
+<!-- Auth Modal Overlay -->
+<div id="auth-modal" class="modal hidden">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeAuthModal()">&times;</span>
+
+    <!-- 1. SIGNUP STEP 1: Email & Username -->
+    <form id="signup-form" onsubmit="handleSignup(event)">
+      <h2>Create Account</h2>
+      <input type="text" id="signup-username" placeholder="Username" required />
+      <input type="email" id="signup-email" placeholder="Email" required />
+      <button type="submit">Send Verification Code</button>
+      <p>Already have an account? <a href="#" onclick="switchTab('login')">Log In</a></p>
+    </form>
+
+    <!-- 2. SIGNUP STEP 2: Verify Code & Set Password -->
+    <form id="verify-form" class="hidden" onsubmit="handleVerifyAndSetPassword(event)">
+      <h2>Enter 6-Digit Code</h2>
+      <p>We sent a verification code to your email.</p>
+      <input type="text" id="verify-code" placeholder="6-Digit Code" maxlength="6" required />
+      <input type="password" id="signup-password" placeholder="Password (8+ chars, A-Z, 0-9, symbol)" required />
+      <button type="submit">Complete Sign Up</button>
+    </form>
+
+    <!-- 3. LOGIN FORM -->
+    <form id="login-form" class="hidden" onsubmit="handleLogin(event)">
+      <h2>Log In</h2>
+      <input type="text" id="login-username" placeholder="Username" required />
+      <input type="password" id="login-password" placeholder="Password" required />
+      <button type="submit">Log In</button>
+      <p><a href="#" onclick="switchTab('forgot')">Forgot Password?</a></p>
+      <p>Need an account? <a href="#" onclick="switchTab('signup')">Sign Up</a></p>
+    </form>
+
+    <!-- 4. FORGOT PASSWORD -->
+    <form id="forgot-form" class="hidden" onsubmit="handleForgotPassword(event)">
+      <h2>Reset Password</h2>
+      <input type="email" id="forgot-email" placeholder="Your Email" required />
+      <button type="submit">Send Reset Code</button>
+    </form>
+
+    <!-- 5. RESET PASSWORD STEP 2 -->
+    <form id="reset-form" class="hidden" onsubmit="handleResetPassword(event)">
+      <h2>Set New Password</h2>
+      <input type="text" id="reset-code" placeholder="6-Digit Code" maxlength="6" required />
+      <input type="password" id="reset-new-password" placeholder="New Password" required />
+      <button type="submit">Reset Password</button>
+    </form>
+  </div>
+</div>
+
+<!-- Save Playlist Section (Appears beneath playlist generator) -->
+<div id="save-playlist-container" class="hidden">
+  <input type="text" id="playlist-title-input" placeholder="Name your playlist..." />
+  <label>
+    <input type="checkbox" id="playlist-public-checkbox" checked /> Public Playlist
+  </label>
+  <button onclick="saveCurrentPlaylist()">Save Playlist</button>
+</div>
