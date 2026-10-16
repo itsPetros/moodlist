@@ -11,93 +11,29 @@
 <body>
 <noscript><p class="error" style="padding:16px">MoodList needs JavaScript to work.</p></noscript>
 
-<!-- 1. AUTHENTICATION SCREEN -->
+<!-- 1. GOOGLE-ONLY WELCOME HERO SCREEN -->
 <div id="auth-screen" class="auth-container">
-  <div class="auth-card">
-    <div class="auth-header">
-      <img src="/static/icons/icon-192.png" alt="MoodList" width="48" height="48">
-      <h2>Welcome to MoodList</h2>
-      <p id="auth-subtitle">Log in to generate and save custom playlists</p>
+  <div class="auth-hero-card">
+    <div class="auth-brand-glow"></div>
+    <img src="/static/icons/icon-192.png" alt="MoodList" class="auth-logo">
+    
+    <h1 class="auth-title">MoodList</h1>
+    <p class="auth-tagline">Your vibe. Your music. Instantly.</p>
+    <p class="auth-description">Generate personalized music playlists tailored to your mood, time of day, and weather in seconds.</p>
+
+    <div class="auth-google-wrapper">
+      <div id="g_id_onload"
+           data-client_id="485385334902-is5ja9oc48gaav7hf1k1ml21744lrjv3.apps.googleusercontent.com"
+           data-callback="handleGoogleSignIn">
+      </div>
+      <div class="g_id_signin" 
+           data-type="standard" 
+           data-size="large" 
+           data-theme="outline" 
+           data-text="sign_in_with"
+           data-shape="pill">
+      </div>
     </div>
-
-    <!-- Login Form -->
-    <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
-      <div class="field-group">
-        <label for="login-username">Username</label>
-        <input type="text" id="login-username" class="auth-input" required />
-      </div>
-      <div class="field-group">
-        <label for="login-password">Password</label>
-        <input type="password" id="login-password" class="auth-input" required />
-      </div>
-      <button type="submit" class="auth-btn-primary">Log In</button>
-      
-      <div style="margin: 16px 0; text-align: center;">
-        <div id="g_id_onload"
-             data-client_id="485385334902-is5ja9oc48gaav7hf1k1ml21744lrjv3.apps.googleusercontent.com"
-             data-callback="handleGoogleSignIn">
-        </div>
-        <div class="g_id_signin" 
-             data-type="standard" 
-             data-size="large" 
-             data-theme="outline" 
-             data-text="sign_in_with">
-        </div>
-      </div>
-
-      <p class="auth-switch">Need an account? <a href="#" onclick="switchAuthTab('signup')">Sign Up</a></p>
-      <p class="auth-switch"><a href="#" onclick="switchAuthTab('forgot')">Forgot Password?</a></p>
-    </form>
-
-    <!-- Signup Form -->
-    <form id="signup-form" class="auth-form hidden" onsubmit="handleSignup(event)">
-      <div class="field-group">
-        <label for="signup-username">Username</label>
-        <input type="text" id="signup-username" class="auth-input" required />
-      </div>
-      <div class="field-group">
-        <label for="signup-email">Email</label>
-        <input type="email" id="signup-email" class="auth-input" required />
-      </div>
-      <button type="submit" class="auth-btn-primary">Sign Up with Email</button>
-      <p class="auth-switch">Already have an account? <a href="#" onclick="switchAuthTab('login')">Log In</a></p>
-    </form>
-
-    <!-- Verification & Password Setup -->
-    <form id="verify-form" class="auth-form hidden" onsubmit="handleVerifyAndSetPassword(event)">
-      <div class="field-group">
-        <label for="verify-code">6-Digit Verification Code</label>
-        <input type="text" id="verify-code" class="auth-input" maxlength="6" required />
-      </div>
-      <div class="field-group">
-        <label for="signup-password">Create Password</label>
-        <input type="password" id="signup-password" class="auth-input" placeholder="8+ chars" required />
-      </div>
-      <button type="submit" class="auth-btn-primary">Complete Setup & Log In</button>
-    </form>
-
-    <!-- Forgot Password -->
-    <form id="forgot-form" class="auth-form hidden" onsubmit="handleForgotPassword(event)">
-      <div class="field-group">
-        <label for="forgot-email">Account Email</label>
-        <input type="email" id="forgot-email" class="auth-input" required />
-      </div>
-      <button type="submit" class="auth-btn-primary">Send Reset Code</button>
-      <p class="auth-switch"><a href="#" onclick="switchAuthTab('login')">Back to Log In</a></p>
-    </form>
-
-    <!-- Reset Password -->
-    <form id="reset-form" class="auth-form hidden" onsubmit="handleResetPassword(event)">
-      <div class="field-group">
-        <label for="reset-code">Reset Code</label>
-        <input type="text" id="reset-code" class="auth-input" maxlength="6" required />
-      </div>
-      <div class="field-group">
-        <label for="reset-new-password">New Password</label>
-        <input type="password" id="reset-new-password" class="auth-input" required />
-      </div>
-      <button type="submit" class="auth-btn-primary">Reset Password</button>
-    </form>
   </div>
 </div>
 
@@ -105,7 +41,7 @@
 <div id="main-app-screen" class="hidden">
   <header class="app-header">
     <div class="brand" style="display:flex; align-items:center; gap:10px;">
-      <img src="/static/icons/icon-192.png" alt="" width="32" height="32">
+      <img src="/static/icons/icon-192.png" alt="MoodList" width="32" height="32">
       <h2 style="font-size:1.2rem; margin:0;">MoodList</h2>
     </div>
     <div id="user-nav" class="user-badge"></div>

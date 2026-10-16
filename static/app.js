@@ -2,7 +2,6 @@
 
 const $ = (sel) => document.querySelector(sel);
 const TOKEN_KEY = "moodlist_jwt_token";
-let pendingEmail = "";
 
 const state = { mood: null, time: null, weather: null, genre: "any", tracks: [] };
 
@@ -78,21 +77,9 @@ function renderAppHeader(user) {
   `;
 }
 
-window.switchAuthTab = function(tab) {
-  const forms = ["login-form", "signup-form", "verify-form", "forgot-form", "reset-form"];
-  forms.forEach(id => {
-    const el = $("#" + id);
-    if (el) el.classList.add("hidden");
-  });
-  const activeForm = $("#" + tab + "-form");
-  if (activeForm) activeForm.classList.remove("hidden");
-};
-
 /* ---------------------------------------------------- Auth Handlers */
 
 window.handleGoogleSignIn = async function(response) {
-  console.log("Google Credential Received:", response.credential);
-
   try {
     const res = await fetch('/auth/google', {
       method: 'POST',
@@ -105,118 +92,19 @@ window.handleGoogleSignIn = async function(response) {
     try {
       data = JSON.parse(text);
     } catch (e) {
-      console.error("Server returned non-JSON response:", text);
-      alert("Backend Error: Check your Uvicorn terminal!");
+      alert("Backend Error: Check server terminal.");
       return;
     }
 
     if (res.ok && data && data.access_token) {
       localStorage.setItem(TOKEN_KEY, data.access_token);
-      toast("Signed in with Google!");
-      checkAuthFlow(); // Immediately switches to the main playlist screen
+      toast("Welcome to MoodList!");
+      checkAuthFlow();
     } else {
       alert("Auth failed: " + (data?.detail || "Unknown error"));
     }
   } catch (err) {
-    console.error("Network error:", err);
     alert("Could not connect to backend server.");
-  }
-};
-
-window.handleLogin = async function(e) {
-  e.preventDefault();
-  const formData = new FormData();
-  formData.append("username", $("#login-username").value);
-  formData.append("password", $("#login-password").value);
-
-  const res = await fetch("/login", { method: "POST", body: formData });
-  const data = await res.json();
-
-  if (res.ok) {
-    localStorage.setItem(TOKEN_KEY, data.access_token);
-    checkAuthFlow();
-  } else {
-    alert(data.detail || "Login failed");
-  }
-};
-
-window.handleSignup = async function(e) {
-  e.preventDefault();
-  const username = $("#signup-username").value;
-  const email = $("#signup-email").value;
-
-  const res = await fetch("/auth/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, email })
-  });
-
-  const data = await res.json();
-  if (res.ok) {
-    pendingEmail = email;
-    toast("Verification code sent");
-    switchAuthTab("verify");
-  } else {
-    alert(data.detail || "Registration failed");
-  }
-};
-
-window.handleVerifyAndSetPassword = async function(e) {
-  e.preventDefault();
-  const code = $("#verify-code").value;
-  const password = $("#signup-password").value;
-
-  const res = await fetch("/auth/set-password", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: pendingEmail, code, password })
-  });
-
-  if (res.ok) {
-    toast("Account verified! Logging in...");
-    switchAuthTab("login");
-  } else {
-    const data = await res.json();
-    alert(data.detail || "Verification failed");
-  }
-};
-
-window.handleForgotPassword = async function(e) {
-  e.preventDefault();
-  pendingEmail = $("#forgot-email").value;
-
-  const res = await fetch("/auth/forgot-password", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: pendingEmail })
-  });
-
-  const data = await res.json();
-  if (res.ok) {
-    toast("Reset code sent");
-    switchAuthTab("reset");
-  } else {
-    alert(data.detail || "Request failed");
-  }
-};
-
-window.handleResetPassword = async function(e) {
-  e.preventDefault();
-  const code = $("#reset-code").value;
-  const new_password = $("#reset-new-password").value;
-
-  const res = await fetch("/auth/reset-password", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: pendingEmail, code, new_password })
-  });
-
-  if (res.ok) {
-    toast("Password updated! Please log in.");
-    switchAuthTab("login");
-  } else {
-    const data = await res.json();
-    alert(data.detail || "Reset failed");
   }
 };
 

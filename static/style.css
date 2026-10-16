@@ -2,6 +2,7 @@
 .hidden {
   display: none !important;
 }
+
 :root {
   color-scheme: dark light;
   --bg: #0f1115;
@@ -15,6 +16,7 @@
   --radius: 16px;
   --tap: 44px;
 }
+
 @media (prefers-color-scheme: light) {
   :root {
     --bg: #f6f7fb;
@@ -32,6 +34,7 @@
 [hidden] { display: none !important; }
 
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -40,9 +43,9 @@ body {
   color: var(--text);
   font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-tap-highlight-color: transparent;
-  /* keep content out of notches and home-indicator areas */
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
+
 button, a.btn { font: inherit; touch-action: manipulation; }
 h1, h2 { margin: 0; line-height: 1.2; }
 h1 { font-size: 1.5rem; }
@@ -58,7 +61,9 @@ h2 { font-size: 1.25rem; margin-bottom: 4px; }
   display: grid;
   gap: 16px;
 }
+
 .panel { min-width: 0; }
+
 @media (min-width: 900px) {
   .app {
     grid-template-columns: minmax(340px, 420px) minmax(0, 1fr);
@@ -79,6 +84,7 @@ h2 { font-size: 1.25rem; margin-bottom: 4px; }
 .group legend { padding: 0; margin-bottom: 8px; font-weight: 600; }
 .optional { font-weight: 400; color: var(--muted); font-size: 0.8rem; margin-left: 6px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
 .chip {
   min-height: var(--tap);
   padding: 0 14px;
@@ -91,6 +97,7 @@ h2 { font-size: 1.25rem; margin-bottom: 4px; }
   gap: 6px;
   cursor: pointer;
 }
+
 .chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
 .chip:focus-visible, .btn:focus-visible, .icon-btn:focus-visible, .primary:focus-visible, .track:focus-visible {
   outline: 3px solid var(--accent);
@@ -104,6 +111,7 @@ h2 { font-size: 1.25rem; margin-bottom: 4px; }
   padding-top: 8px;
   background: linear-gradient(to top, var(--bg) 70%, transparent);
 }
+
 .primary {
   width: 100%;
   min-height: 52px;
@@ -115,6 +123,7 @@ h2 { font-size: 1.25rem; margin-bottom: 4px; }
   font-size: 1.05rem;
   cursor: pointer;
 }
+
 .primary:disabled { opacity: 0.45; cursor: default; }
 .hint { margin: 6px 0 0; text-align: center; color: var(--muted); font-size: 0.875rem; min-height: 1.3em; }
 
@@ -126,23 +135,9 @@ h2 { font-size: 1.25rem; margin-bottom: 4px; }
 .error { color: var(--danger); margin: 0 0 12px; }
 .note { margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; background: var(--accent-soft); font-size: 0.9rem; }
 
-.player-wrap { margin: 12px 0 16px; background: var(--surface); border-radius: var(--radius); overflow: hidden; }
-.player { aspect-ratio: 16 / 9; width: 100%; background: #000; }
-.player iframe, .player > div { display: block; width: 100%; height: 100%; border: 0; }
-.now { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
-.now-text { flex: 1; min-width: 0; }
-.now-title, .now-artist { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.now-title { font-weight: 600; }
-.controls { display: flex; gap: 6px; }
-.icon-btn {
-  width: var(--tap); height: var(--tap);
-  border: 0; border-radius: 50%;
-  background: var(--surface-2); color: var(--text);
-  font-size: 1.1rem; cursor: pointer;
-}
-
 .tracks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; counter-reset: n; }
 .tracks li { counter-increment: n; }
+
 .track {
   width: 100%;
   min-height: 56px;
@@ -158,34 +153,19 @@ h2 { font-size: 1.25rem; margin-bottom: 4px; }
   text-decoration: none;
   cursor: pointer;
 }
+
 .track::before { content: counter(n); width: 1.6em; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; flex: none; }
 .track .t-text { flex: 1; min-width: 0; }
 .track .t-title, .track .t-artist { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .track .t-title { font-weight: 600; }
 .track .t-artist { color: var(--muted); font-size: 0.9rem; }
-.track .t-tag { flex: none; color: var(--muted); font-size: 0.85rem; }
 .track[aria-current="true"] { border-color: var(--accent); background: var(--accent-soft); }
-.track.unavailable { opacity: 0.55; }
 
-/* a song row = the play button plus a small "open on YouTube" arrow */
 .row { display: flex; gap: 6px; align-items: stretch; }
 .row .track { flex: 1; min-width: 0; width: auto; }
-.open {
-  flex: none;
-  width: var(--tap);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-  background: var(--surface);
-  color: var(--muted);
-  text-decoration: none;
-  font-size: 1.1rem;
-}
-.open:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-.player-note { margin: 0 14px 12px; }
 
 .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+
 .btn {
   min-height: var(--tap);
   padding: 0 16px;
@@ -199,6 +179,7 @@ h2 { font-size: 1.25rem; margin-bottom: 4px; }
   text-decoration: none;
   cursor: pointer;
 }
+
 @media (max-width: 480px) {
   .actions .btn { flex: 1 1 100%; }
 }
@@ -216,25 +197,20 @@ h2 { font-size: 1.25rem; margin-bottom: 4px; }
   pointer-events: none;
   transition: opacity 0.2s, transform 0.2s;
 }
+
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
-/* short landscape phones: keep the player from eating the whole screen */
-@media (max-height: 500px) and (orientation: landscape) {
-  .player { max-height: 70vh; width: auto; margin: 0 auto; }
-  .brand { margin-bottom: 8px; }
-}
 @media (hover: hover) {
   .chip:hover { background: var(--accent-soft); }
   .track:hover:not([aria-current="true"]) { background: var(--surface-2); }
   .btn:hover, .icon-btn:hover { filter: brightness(1.15); }
-  .open:hover { background: var(--surface-2); color: var(--text); }
   .primary:hover:not(:disabled) { filter: brightness(1.1); }
 }
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; scroll-behavior: auto !important; }
 }
 
-/* main button above the song list: opens every matched song as one YouTube playlist */
 .cta-link {
   display: flex;
   width: 100%;
@@ -245,123 +221,11 @@ h2 { font-size: 1.25rem; margin-bottom: 4px; }
   font-weight: 700;
   text-align: center;
 }
+
 .cta-link[hidden] { display: none; }
 .track.is-link { text-decoration: none; }
 
-/* --- Authentication Screen & Layout --- */
-.hidden {
-  display: none !important;
-}
-
-.auth-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: radial-gradient(circle at top, #1a1e29 0%, #0f1115 100%);
-}
-
-.auth-card {
-  background: rgba(22, 26, 35, 0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 32px;
-  width: 100%;
-  max-width: 420px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-}
-
-.auth-header {
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.auth-header img {
-  margin-bottom: 12px;
-}
-
-.auth-header h2 {
-  font-size: 1.5rem;
-  margin-bottom: 6px;
-  color: #ffffff;
-}
-
-.auth-header p {
-  color: #8a8f9d;
-  font-size: 0.9rem;
-}
-
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.field-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.field-group label {
-  font-size: 0.825rem;
-  color: #a0a5b5;
-  font-weight: 500;
-}
-
-.auth-input {
-  width: 100%;
-  padding: 12px 14px;
-  background: #0f1115;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  color: #ffffff;
-  font-size: 0.95rem;
-  outline: none;
-  transition: border-color 0.2s ease;
-}
-
-.auth-input:focus {
-  border-color: #4f46e5;
-}
-
-.auth-btn-primary {
-  width: 100%;
-  padding: 12px;
-  background: #4f46e5;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  margin-top: 8px;
-}
-
-.auth-btn-primary:hover {
-  background: #4338ca;
-}
-
-.auth-switch {
-  text-align: center;
-  font-size: 0.875rem;
-  color: #8a8f9d;
-  margin-top: 16px;
-}
-
-.auth-switch a {
-  color: #6366f1;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.auth-switch a:hover {
-  text-decoration: underline;
-}
-
+/* --- App Header & Navigation --- */
 .app-header {
   display: flex;
   justify-content: space-between;
@@ -384,73 +248,8 @@ h2 { font-size: 1.25rem; margin-bottom: 4px; }
   border: 1px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
 }
-/* --- Missing Auth Forms & Utility Styles --- */
 
-/* Hides inactive forms and sections */
-.hidden {
-  display: none !important;
-}
-
-/* Fullscreen Auth Page Layout */
-.auth-container {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: radial-gradient(circle at top, #1a1e29 0%, #0f1115 100%);
-}
-
-.auth-card {
-  background: rgba(22, 26, 35, 0.95);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 32px;
-  width: 100%;
-  max-width: 420px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-}
-
-.auth-header {
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.auth-header img {
-  margin-bottom: 12px;
-}
-
-.auth-header h2 {
-  font-size: 1.5rem;
-  margin-bottom: 6px;
-  color: #ffffff;
-}
-
-.auth-header p {
-  color: #8a8f9d;
-  font-size: 0.9rem;
-}
-
-/* Form Controls & Inputs */
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.field-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.field-group label {
-  font-size: 0.825rem;
-  color: #a0a5b5;
-  font-weight: 500;
-}
-
+/* --- Playlist Save Title Input --- */
 .auth-input {
   width: 100%;
   padding: 12px 14px;
@@ -467,55 +266,80 @@ h2 { font-size: 1.25rem; margin-bottom: 4px; }
   border-color: #6366f1;
 }
 
-.auth-btn-primary {
+/* --- Google-Only Welcome Hero Screen --- */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(circle at 50% 30%, #1e1b4b 0%, #0f1115 70%);
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-hero-card {
+  position: relative;
+  background: rgba(26, 29, 36, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 48px 32px;
   width: 100%;
-  padding: 12px;
-  background: #4f46e5;
-  color: #ffffff;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-  margin-top: 8px;
-}
-
-.auth-btn-primary:hover {
-  background: #4338ca;
-}
-
-.auth-switch {
+  max-width: 440px;
   text-align: center;
-  font-size: 0.875rem;
-  color: #8a8f9d;
-  margin-top: 12px;
-}
-
-.auth-switch a {
-  color: #6366f1;
-  text-decoration: none;
-}
-
-/* Main Screen Navigation Header */
-.app-header {
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  padding: 16px 32px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.user-badge {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.user-avatar {
-  width: 36px;
-  height: 36px;
+.auth-brand-glow {
+  position: absolute;
+  top: -40px;
+  width: 120px;
+  height: 120px;
+  background: #7c5cff;
+  opacity: 0.35;
+  filter: blur(50px);
   border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  cursor: pointer;
+  pointer-events: none;
+}
+
+.auth-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 24px rgba(124, 92, 255, 0.3);
+}
+
+.auth-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.5px;
+}
+
+.auth-tagline {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #a78bfa;
+  margin: 0 0 16px 0;
+}
+
+.auth-description {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #94a3b8;
+  margin: 0 0 32px 0;
+  max-width: 340px;
+}
+
+.auth-google-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }

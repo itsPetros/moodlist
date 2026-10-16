@@ -1,74 +1,40 @@
 import os
 import time
-import random
-import string
 import uuid
 from collections import defaultdict, deque
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List
 from urllib.parse import quote_plus
-import resend
 
 from fastapi import FastAPI, Depends, HTTPException, status, Query, Request, File, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
-from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+from google.oauth2 import id_token
+from google.auth.transport import requests
+from dotenv import load_dotenv
 
 import catalog
 import options
 import youtube
-import models, schemas, auth
+import models
+import schemas
+import auth
 from database import engine, Base, get_db
-from dotenv import load_dotenv
-from google.oauth2 import id_token
-from google.auth.transport import requests
-from jose import jwt
 
-load_dotenv() 
-resend.api_key = os.getenv("RESEND_API_KEY")
+load_dotenv()
+
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 
 STATIC = Path(__file__).resolve().parent / "static"
 UPLOAD_DIR = Path("uploads/profile_pics")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
 NO_STORE = {"Cache-Control": "no-store"}
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 MAX_FILE_SIZE = 2 * 1024 * 1024  # 2 MB
 
-def generate_6digit_code() -> str:
-    return "".join(random.choices(string.digits, k=6))
-
-def send_verification_email(to_email: str, code: str, subject: str = "Your MoodList Verification Code"):
-    if not resend.api_key:
-        print(f"[DEMO MODE] RESEND_API_KEY missing. Code for {to_email}: {code}")
-        return
-
-    try:
-        response = resend.Emails.send({
-            "from": "MoodList <onboarding@resend.dev>",
-            "to": [to_email],
-            "subject": subject,
-            "html": f"""
-            <div style="font-family: Arial, sans-serif; padding: 20px; background: #0f1115; color: #ffffff; border-radius: 8px;">
-                <h2 style="color: #6366f1;">Welcome to MoodList!</h2>
-                <p>Use the code below to complete your registration:</p>
-                <div style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #a855f7; margin: 20px 0;">
-                    {code}
-                </div>
-                <p style="color: #8a8f9d; font-size: 14px;">This code will expire in 15 minutes.</p>
-            </div>
-            """
-        })
-        print(f"Verification email delivered to {to_email}. ID: {response['id']}")
-    except Exception as e:
-        print(f"Failed to send email to {to_email}: {e}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -76,9 +42,11 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     yield
 
+
 app = FastAPI(title="MoodList", lifespan=lifespan)
 
 app.mount("/static/profile_pics", StaticFiles(directory=UPLOAD_DIR), name="profile_pics")
+
 
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
@@ -87,7 +55,10 @@ async def security_headers(request: Request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response
 
+
+# Rate Limiter
 _hits = defaultdict(deque)
+
 
 def rate_limited(ip: str) -> bool:
     limit = int(os.environ.get("RATE_LIMIT_PER_MIN", "60"))
@@ -100,7 +71,8 @@ def rate_limited(ip: str) -> bool:
     q.append(now)
     return False
 
-# --- AUTH & USER ENDPOINTS ---
+
+# --- AUTHENTICATION & USER ENDPOINTS ---
 
 @app.post("/auth/google")
 def google_auth(data: dict, db: Session = Depends(get_db)):
@@ -113,7 +85,7 @@ def google_auth(data: dict, db: Session = Depends(get_db)):
             token, 
             requests.Request(), 
             GOOGLE_CLIENT_ID,
-            clock_skew_in_seconds=10
+            clock_skew_in_seconds=60
         )
 
         user_email = id_info["email"]
@@ -132,102 +104,12 @@ def google_auth(data: dict, db: Session = Depends(get_db)):
             db.commit()
             db.refresh(user)
 
-        # USE auth.create_access_token TO MATCH auth.py VALIDATION
         access_token = auth.create_access_token(data={"sub": user.username})
         return {"access_token": access_token, "token_type": "bearer"}
 
     except ValueError as e:
         print(f"Google Auth Error: {e}")
         raise HTTPException(status_code=400, detail="Invalid Google token")
-
-
-@app.post("/auth/register", status_code=status.HTTP_201_CREATED)
-def register(user_data: schemas.UserRegister, db: Session = Depends(get_db)):
-    if db.query(models.User).filter(models.User.username == user_data.username).first():
-        raise HTTPException(status_code=400, detail="Username already exists")
-    if db.query(models.User).filter(models.User.email == user_data.email).first():
-        raise HTTPException(status_code=400, detail="Email already exists")
-
-    code = generate_6digit_code()
-    expires = datetime.utcnow() + timedelta(minutes=15)
-
-    user = models.User(
-        username=user_data.username,
-        email=user_data.email,
-        verification_code=code,
-        verification_expires_at=expires,
-        is_verified=False
-    )
-    db.add(user)
-    db.commit()
-
-    send_verification_email(user_data.email, code, "Verify your MoodList account")
-    return {"message": "Verification code sent to your email."}
-
-
-@app.post("/auth/set-password", response_model=schemas.UserResponse)
-def verify_code_and_set_password(data: schemas.SetPasswordRequest, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == data.email).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    if user.verification_code != data.code or user.verification_expires_at < datetime.utcnow():
-        raise HTTPException(status_code=400, detail="Invalid or expired verification code")
-
-    user.hashed_password = auth.get_password_hash(data.password)
-    user.is_verified = True
-    user.verification_code = None
-    user.verification_expires_at = None
-
-    db.commit()
-    db.refresh(user)
-    return user
-
-
-@app.post("/login", response_model=schemas.Token)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.username == form_data.username).first()
-    if not user or not user.is_verified or not auth.verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials or account not verified",
-        )
-
-    access_token = create_access_token(data={"sub": user.username})
-    return {"access_token": access_token, "token_type": "bearer"}
-
-
-@app.post("/auth/forgot-password", status_code=status.HTTP_200_OK)
-def request_password_reset(data: schemas.ForgotPasswordRequest, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == data.email).first()
-    success_msg = {"message": "If an account exists with this email, a verification code has been sent."}
-    if not user:
-        return success_msg
-
-    reset_code = generate_6digit_code()
-    user.verification_code = reset_code
-    user.verification_expires_at = datetime.utcnow() + timedelta(minutes=15)
-    db.commit()
-
-    send_verification_email(data.email, reset_code, "Reset your MoodList password")
-    return success_msg
-
-
-@app.post("/auth/reset-password", status_code=status.HTTP_200_OK)
-def reset_password(data: schemas.ResetPasswordRequest, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == data.email).first()
-    if not user or not user.verification_code or user.verification_code != data.code:
-        raise HTTPException(status_code=400, detail="Invalid or expired verification code")
-
-    if user.verification_expires_at < datetime.utcnow():
-        raise HTTPException(status_code=400, detail="Verification code has expired")
-
-    user.hashed_password = auth.get_password_hash(data.new_password)
-    user.verification_code = None
-    user.verification_expires_at = None
-    db.commit()
-
-    return {"message": "Password reset successfully. You can now log in."}
 
 
 @app.get("/users/me", response_model=schemas.UserResponse)
@@ -368,15 +250,19 @@ def make_playlist(
 def healthz():
     return {"ok": True}
 
+
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
+
 
 @app.get("/")
 def index():
     return FileResponse(STATIC / "index.html", headers={"Cache-Control": "no-cache"})
 
+
 @app.get("/manifest.webmanifest")
 def manifest():
     return FileResponse(STATIC / "manifest.webmanifest", media_type="application/manifest+json")
+
 
 @app.get("/sw.js")
 def service_worker():
