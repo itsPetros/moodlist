@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import List
 from urllib.parse import quote_plus
 
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Depends, HTTPException, status, Query, Request, File, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -55,6 +56,17 @@ async def security_headers(request: Request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response
 
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=[
+#         "http://localhost:8000",
+#         "http://127.0.0.1:8000",
+#         "https://catering-survive-tinkling.ngrok-free.dev",
+#     ],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 # Rate Limiter
 _hits = defaultdict(deque)
