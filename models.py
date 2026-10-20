@@ -4,7 +4,7 @@ from database import Base
 from sqlalchemy import ARRAY, Boolean, Column, DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-
+from sqlalchemy import ARRAY, JSON, Boolean, Column, DateTime, ForeignKey, String, Text
 
 class User(Base):
     __tablename__ = "users"
@@ -24,7 +24,7 @@ class User(Base):
     )
 
     playlists = relationship("SavedPlaylist", back_populates="owner", cascade="all, delete-orphan")
-
+    history = relationship("PlaylistHistory", back_populates="owner", cascade="all, delete-orphan")
 
 class SavedPlaylist(Base):
     __tablename__ = "saved_playlists"
@@ -42,3 +42,21 @@ class SavedPlaylist(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     owner = relationship("User", back_populates="playlists")
+
+class PlaylistHistory(Base):
+    """Every playlist a signed-in user generated (newest 50 kept)."""
+    __tablename__ = "playlist_history"
+    __table_args__ = {'extend_existing': True}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    title = Column(String(200), nullable=False)
+    mood = Column(String(50), nullable=False)
+    genre = Column(String(50), nullable=False)
+    weather = Column(String(50), nullable=True)
+    time_of_day = Column(String(50), nullable=True)
+    tracks = Column(JSON, nullable=False, default=list)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    owner = relationship("User", back_populates="history")
+        

@@ -19,6 +19,12 @@ function toast(message) {
   toast.timer = setTimeout(() => el.classList.remove("show"), 1800);
 }
 
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (ch) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]
+  ));
+}
+
 function showError(message) {
   const el = $("#error");
   if (el) {
@@ -70,8 +76,8 @@ function renderAppHeader(user) {
   if (!nav) return;
   const avatar = user.profile_picture_url || "/static/icons/icon-192.png";
   nav.innerHTML = `
-    <img src="${avatar}" alt="Avatar" class="user-avatar" onclick="triggerAvatarUpload()" title="Click to change profile picture" />
-    <span style="font-weight:500;">${user.username}</span>
+    <img src="${esc(avatar)}" alt="Avatar" class="user-avatar" onclick="triggerAvatarUpload()" title="Click to change profile picture" />
+    <a href="/profile" class="user-link" title="View your profile">${esc(user.username)}</a>
     <button type="button" class="btn" onclick="handleLogout()">Logout</button>
     <input type="file" id="avatar-file-input" style="display:none" onchange="uploadAvatar(this)" />
   `;
@@ -210,7 +216,7 @@ async function generate() {
   if (state.weather) params.set("weather", state.weather);
 
   try {
-    const res = await fetch("/api/playlist?" + params);
+    const res = await fetch("/api/playlist?" + params, { headers: getAuthHeaders() });
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || "Error generating playlist.");
     renderResult(data);

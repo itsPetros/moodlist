@@ -29,6 +29,13 @@ class PlaylistCreate(BaseModel):
     is_public: bool = True
 
 
+class TrackOut(BaseModel):
+    artist: str = ""
+    title: str
+    video_id: Optional[str] = None
+    url: str
+
+
 class PlaylistResponse(BaseModel):
     id: UUID
     user_id: UUID
@@ -39,6 +46,20 @@ class PlaylistResponse(BaseModel):
     time_of_day: Optional[str] = None
     song_ids: List[str]
     is_public: bool
+    created_at: datetime
+    tracks: List[TrackOut] = []
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class HistoryResponse(BaseModel):
+    id: UUID
+    title: str
+    mood: str
+    genre: str
+    weather: Optional[str] = None
+    time_of_day: Optional[str] = None
+    tracks: List[TrackOut] = []
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
