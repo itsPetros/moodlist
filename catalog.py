@@ -215,6 +215,23 @@ def pick_songs(mood, time=None, weather=None, genre="any", size=12, rng=None, on
 
 # ------------------------------------------------------------- video ids and quota
 
+def lookup_videos(video_ids):
+    """Map YouTube video ids to {"artist", "title"}. Also knows ids that were later replaced
+    (bad_ids), so older saved playlists keep their song names."""
+    wanted = {v for v in video_ids if v}
+    found = {}
+    if not wanted:
+        return found
+    with db() as con:
+        rows = con.execute(
+            "SELECT artist, title, video_id, bad_ids FROM songs WHERE video_id IS NOT NULL OR bad_ids != ''"
+        ).fetchall()
+    for r in rows:
+        for vid in [r["video_id"], *r["bad_ids"].split(",")]:
+            if vid in wanted and vid not in found:
+                found[vid] = {"artist": r["artist"], "title": r["title"]}
+    return found
+
 def pending(limit=None, include_failed=False):
     statuses = ("pending", "failed") if include_failed else ("pending",)
     q = f"SELECT * FROM songs WHERE status IN ({','.join('?' * len(statuses))}) ORDER BY id"

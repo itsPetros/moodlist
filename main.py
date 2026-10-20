@@ -5,6 +5,7 @@ from collections import defaultdict, deque
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import List
+from uuid import UUID
 from urllib.parse import quote_plus
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -35,6 +36,7 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 NO_STORE = {"Cache-Control": "no-store"}
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 MAX_FILE_SIZE = 2 * 1024 * 1024  # 2 MB
+HISTORY_LIMIT = 50  # newest playlists kept per user
 
 
 @asynccontextmanager
@@ -189,13 +191,133 @@ def save_playlist(
     return playlist
 
 
+def _watch_url(video_id: str) -> str:
+    return f"https://www.youtube.com/watch?v={video_id}"
+
+
 @app.get("/users/me/playlists", response_model=List[schemas.PlaylistResponse])
 def get_my_playlists(
     current_user: models.User = Depends(auth.get_current_user),
     db: Session = Depends(get_db)
 ):
-    return db.query(models.SavedPlaylist).filter(models.SavedPlaylist.user_id == current_user.id).all()
+    rows = (
+        db.query(models.SavedPlaylist)
+        .filter(models.SavedPlaylist.user_id == current_user.id)
+        .order_by(models.SavedPlaylist.created_at.desc())
+        .all()
+    )
+    known = catalog.lookup_videos([v for p in rows for v in p.song_ids])
+    out = []
+    for p in rows:
+        item = schemas.PlaylistResponse.model_validate(p)
+        item.tracks = [
+            schemas.TrackOut(
+                artist=known.get(v, {}).get("artist", ""),
+                title=known.get(v, {}).get("title", "Song on YouTube"),
+                video_id=v,
+                url=_watch_url(v),
+            )
+            for v in p.song_ids
+        ]
+        out.append(item)
+    return out
 
+
+@app.delete("/users/me/playlists/{playlist_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_my_playlist(
+    playlist_id: UUID,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    playlist = (
+        db.query(models.SavedPlaylist)
+        .filter(models.SavedPlaylist.id == playlist_id, models.SavedPlaylist.user_id == current_user.id)
+        .first()
+    )
+    if not playlist:
+        raise HTTPException(status_code=404, detail="Playlist not found")
+    db.delete(playlist)
+    db.commit()
+
+
+# --- PLAYLIST HISTORY ---
+
+@app.get("/users/me/history", response_model=List[schemas.HistoryResponse])
+def get_my_history(
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    return (
+        db.query(models.PlaylistHistory)
+        .filter(models.PlaylistHistory.user_id == current_user.id)
+        .order_by(models.PlaylistHistory.created_at.desc())
+        .limit(HISTORY_LIMIT)
+        .all()
+    )
+
+
+@app.delete("/users/me/history", status_code=status.HTTP_204_NO_CONTENT)
+def clear_my_history(
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    db.query(models.PlaylistHistory).filter(models.PlaylistHistory.user_id == current_user.id).delete()
+    db.commit()
+
+
+@app.delete("/users/me/history/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_history_entry(
+    entry_id: UUID,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    entry = (
+        db.query(models.PlaylistHistory)
+        .filter(models.PlaylistHistory.id == entry_id, models.PlaylistHistory.user_id == current_user.id)
+        .first()
+    )
+    if not entry:
+        raise HTTPException(status_code=404, detail="History entry not found")
+    db.delete(entry)
+    db.commit()
+
+
+def _record_history(db: Session, user: models.User, title, mood, genre, weather, time_of_day, tracks):
+    """Store a generated playlist for a signed-in user. Never lets a failure break generation."""
+    try:
+        db.add(models.PlaylistHistory(
+            user_id=user.id,
+            title=title[:200],
+            mood=mood,
+            genre=genre,
+            weather=weather,
+            time_of_day=time_of_day,
+            tracks=[
+                {
+                    "artist": t["artist"],
+                    "title": t["title"],
+                    "video_id": t["video_id"],
+                    "url": _watch_url(t["video_id"]) if t["video_id"] else t["search_url"],
+                }
+                for t in tracks
+            ],
+        ))
+        db.flush()
+        stale = (
+            db.query(models.PlaylistHistory.id)
+            .filter(models.PlaylistHistory.user_id == user.id)
+            .order_by(models.PlaylistHistory.created_at.desc())
+            .offset(HISTORY_LIMIT)
+            .all()
+        )
+        if stale:
+            db.query(models.PlaylistHistory).filter(
+                models.PlaylistHistory.id.in_([r.id for r in stale])
+            ).delete(synchronize_session=False)
+        db.commit()
+    except Exception as exc:  # noqa: BLE001
+        db.rollback()
+        print(f"Could not record playlist history: {exc}")
 
 # --- PLAYLIST GENERATOR & STATIC FILES ---
 
@@ -212,6 +334,8 @@ def make_playlist(
     weather: str | None = None,
     genre: str = "any",
     size: int = 12,
+    user: models.User | None = Depends(auth.get_optional_user),
+    db: Session = Depends(get_db),
 ):
     if rate_limited(request.client.host if request.client else "unknown"):
         raise HTTPException(429, "Too many requests. Please wait a moment and try again.")
@@ -270,6 +394,10 @@ app.mount("/static", StaticFiles(directory=STATIC), name="static")
 def index():
     return FileResponse(STATIC / "index.html", headers={"Cache-Control": "no-cache"})
 
+
+@app.get("/profile")
+def profile_page():
+    return FileResponse(STATIC / "profile.html", headers={"Cache-Control": "no-cache"})
 
 @app.get("/manifest.webmanifest")
 def manifest():
