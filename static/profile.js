@@ -297,13 +297,14 @@ async function saveFromHistory(p, btn) {
         weather: p.weather,
         time_of_day: p.time_of_day,
         song_ids: songIds,
-        is_public: true,
+        is_public: false,
       }),
     });
+       const before = state.saved.length;
     state.saved = await api("/users/me/playlists");
     renderCounts();
     renderPanels();
-    toast("Saved to your library");
+    toast(state.saved.length === before ? "Already in your library" : "Saved to your library");
   } catch (err) {
     btn.disabled = false;
     toast(err.message);

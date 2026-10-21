@@ -17,6 +17,8 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from dotenv import load_dotenv
 
+import logging
+import secrets
 import catalog
 import options
 import youtube
@@ -28,6 +30,9 @@ from database import engine, Base, get_db
 load_dotenv()
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+logger = logging.getLogger("moodlist")
+if not GOOGLE_CLIENT_ID:
+    raise RuntimeError("GOOGLE_CLIENT_ID is not set")
 
 STATIC = Path(__file__).resolve().parent / "static"
 UPLOAD_DIR = Path("uploads/profile_pics")
@@ -89,42 +94,58 @@ def rate_limited(ip: str) -> bool:
 # --- AUTHENTICATION & USER ENDPOINTS ---
 
 @app.post("/auth/google")
-def google_auth(data: dict, db: Session = Depends(get_db)):
+def google_auth(request: Request, data: dict, db: Session = Depends(get_db)):
+    # 1. Rate limit: stop people hammering the sign-in address
+    ip = request.client.host if request.client else "unknown"
+    if rate_limited(ip):
+        raise HTTPException(status_code=429, detail="Too many attempts. Please wait a minute and try again.")
+
     token = data.get("credential")
     if not token:
         raise HTTPException(status_code=400, detail="Missing credential token")
 
+    # 2. Check the token with Google
     try:
         id_info = id_token.verify_oauth2_token(
-            token, 
-            requests.Request(), 
+            token,
+            requests.Request(),
             GOOGLE_CLIENT_ID,
-            clock_skew_in_seconds=60
+            clock_skew_in_seconds=60,
         )
+    except ValueError as e:
+        logger.warning("Google token rejected: %s", e)
+        raise HTTPException(status_code=400, detail="Invalid Google token")
 
-        user_email = id_info["email"]
-        user_name = id_info.get("name", user_email.split("@")[0])
+    if not id_info.get("email_verified"):
+        raise HTTPException(status_code=400, detail="Your Google email is not verified")
 
+    user_email = id_info["email"]
+    user_name = id_info.get("name") or user_email.split("@")[0]
+
+    # 3. Find or create the user; a database failure becomes a clear message
+    try:
         user = db.query(models.User).filter(models.User.email == user_email).first()
-
         if not user:
+            base = user_name[:40]
+            username = base
+            while db.query(models.User).filter(models.User.username == username).first():
+                username = f"{base}{secrets.randbelow(9000) + 1000}"
             user = models.User(
                 email=user_email,
-                username=user_name,
+                username=username,
                 hashed_password=None,
-                is_verified=True
+                is_verified=True,
             )
             db.add(user)
             db.commit()
             db.refresh(user)
+    except SQLAlchemyError:
+        db.rollback()
+        logger.exception("Database error during sign-in")
+        raise HTTPException(status_code=503, detail="Could not sign you in right now. Please try again.")
 
-        access_token = auth.create_access_token(data={"sub": user.username})
-        return {"access_token": access_token, "token_type": "bearer"}
-
-    except ValueError as e:
-        print(f"Google Auth Error: {e}")
-        raise HTTPException(status_code=400, detail="Invalid Google token")
-
+    access_token = auth.create_access_token(data={"sub": str(user.id)})
+    return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/users/me", response_model=schemas.UserResponse)
 def get_me(current_user: models.User = Depends(auth.get_current_user)):
@@ -137,13 +158,21 @@ async def upload_profile_picture(
     current_user: models.User = Depends(auth.get_current_user),
     db: Session = Depends(get_db)
 ):
-    file_ext = Path(file.filename).suffix.lower()
+    file_ext = Path(file.filename or "").suffix.lower()
     if file_ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail="Invalid extension")
 
-    contents = await file.read()
+    contents = await file.read(MAX_FILE_SIZE + 1)  # never read more than 2 MB + 1 byte
     if len(contents) > MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="File exceeds 2MB limit")
+
+    is_image = (
+        contents.startswith(b"\xff\xd8\xff")                          # JPEG
+        or contents.startswith(b"\x89PNG\r\n\x1a\n")                  # PNG
+        or (contents[:4] == b"RIFF" and contents[8:12] == b"WEBP")    # WebP
+    )
+    if not is_image:
+        raise HTTPException(status_code=400, detail="That file isn't a valid image")
 
     unique_filename = f"{current_user.id}_{uuid.uuid4().hex}{file_ext}"
     file_path = UPLOAD_DIR / unique_filename
@@ -165,8 +194,6 @@ async def upload_profile_picture(
     db.commit()
     db.refresh(current_user)
     return {"profile_picture_url": profile_url}
-
-
 # --- PLAYLIST MANAGEMENT ---
 
 @app.post("/playlists", response_model=schemas.PlaylistResponse, status_code=status.HTTP_201_CREATED)
@@ -175,6 +202,16 @@ def save_playlist(
     current_user: models.User = Depends(auth.get_current_user),
     db: Session = Depends(get_db)
 ):
+    existing = (
+    db.query(models.SavedPlaylist)
+    .filter(
+        models.SavedPlaylist.user_id == current_user.id,
+        models.SavedPlaylist.song_ids == playlist_in.song_ids,
+    )
+    .first()
+)
+    if existing:
+        return existing
     playlist = models.SavedPlaylist(
         user_id=current_user.id,
         title=playlist_in.title,
@@ -198,12 +235,14 @@ def _watch_url(video_id: str) -> str:
 @app.get("/users/me/playlists", response_model=List[schemas.PlaylistResponse])
 def get_my_playlists(
     current_user: models.User = Depends(auth.get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    limit: int = 50
 ):
     rows = (
         db.query(models.SavedPlaylist)
         .filter(models.SavedPlaylist.user_id == current_user.id)
         .order_by(models.SavedPlaylist.created_at.desc())
+        .limit(min(limit,100))
         .all()
     )
     known = catalog.lookup_videos([v for p in rows for v in p.song_ids])
@@ -334,13 +373,20 @@ def make_playlist(
     weather: str | None = None,
     genre: str = "any",
     size: int = 12,
-    user: models.User | None = Depends(auth.get_optional_user),
+    user: models.User = Depends(auth.get_current_user),
     db: Session = Depends(get_db),
 ):
-    if rate_limited(request.client.host if request.client else "unknown"):
+    if rate_limited(str(user.id)):
         raise HTTPException(429, "Too many requests. Please wait a moment and try again.")
     if mood not in options.ids(options.MOODS):
         raise HTTPException(400, "Please pick a mood.")
+    if time_of_day and time_of_day not in options.ids(options.TIMES):
+        raise HTTPException(400, "Unknown time of day.")
+    if weather and weather not in options.ids(options.WEATHERS):
+        raise HTTPException(400, "Unknown weather.")
+    if genre != "any" and genre not in options.ids(options.GENRES):
+        raise HTTPException(400, "Unknown genre.")
+    size = max(10, min(15, size))
 
     matched_only = catalog.ok_count() > 0
     songs, note = catalog.pick_songs(mood, time_of_day, weather, genre, size, only_matched=matched_only)
@@ -379,7 +425,12 @@ def make_playlist(
             else None
         ),
     }
+
+    _record_history(db, user, body["title"], mood, genre, weather, time_of_day, tracks)
     return JSONResponse(body, headers=NO_STORE)
+
+
+
 
 
 @app.get("/healthz")
