@@ -17,6 +17,8 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from dotenv import load_dotenv
 
+import logging
+import secrets
 import catalog
 import options
 import youtube
@@ -28,6 +30,9 @@ from database import engine, Base, get_db
 load_dotenv()
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+logger = logging.getLogger("moodlist")
+if not GOOGLE_CLIENT_ID:
+    raise RuntimeError("GOOGLE_CLIENT_ID is not set")
 
 STATIC = Path(__file__).resolve().parent / "static"
 UPLOAD_DIR = Path("uploads/profile_pics")
@@ -88,43 +93,59 @@ def rate_limited(ip: str) -> bool:
 
 # --- AUTHENTICATION & USER ENDPOINTS ---
 
-@app.post("/auth/google")
-def google_auth(data: dict, db: Session = Depends(get_db)):
-    token = data.get("credential")
-    if not token:
-        raise HTTPException(status_code=400, detail="Missing credential token")
+   @app.post("/auth/google")
+   def google_auth(request: Request, data: dict, db: Session = Depends(get_db)):
+       # 1. Rate limit: stop people hammering the sign-in address
+       ip = request.client.host if request.client else "unknown"
+       if rate_limited(ip):
+           raise HTTPException(status_code=429, detail="Too many attempts. Please wait a minute and try again.")
 
-    try:
-        id_info = id_token.verify_oauth2_token(
-            token, 
-            requests.Request(), 
-            GOOGLE_CLIENT_ID,
-            clock_skew_in_seconds=60
-        )
+       token = data.get("credential")
+       if not token:
+           raise HTTPException(status_code=400, detail="Missing credential token")
 
-        user_email = id_info["email"]
-        user_name = id_info.get("name", user_email.split("@")[0])
+       # 2. Check the token with Google
+       try:
+           id_info = id_token.verify_oauth2_token(
+               token,
+               requests.Request(),
+               GOOGLE_CLIENT_ID,
+               clock_skew_in_seconds=60,
+           )
+       except ValueError as e:
+           logger.warning("Google token rejected: %s", e)
+           raise HTTPException(status_code=400, detail="Invalid Google token")
 
-        user = db.query(models.User).filter(models.User.email == user_email).first()
+       if not id_info.get("email_verified"):
+           raise HTTPException(status_code=400, detail="Your Google email is not verified")
 
-        if not user:
-            user = models.User(
-                email=user_email,
-                username=user_name,
-                hashed_password=None,
-                is_verified=True
-            )
-            db.add(user)
-            db.commit()
-            db.refresh(user)
+       user_email = id_info["email"]
+       user_name = id_info.get("name") or user_email.split("@")[0]
 
-        access_token = auth.create_access_token(data={"sub": user.username})
-        return {"access_token": access_token, "token_type": "bearer"}
+       # 3. Find or create the user; a database failure becomes a clear message
+       try:
+           user = db.query(models.User).filter(models.User.email == user_email).first()
+           if not user:
+               base = user_name[:40]
+               username = base
+               while db.query(models.User).filter(models.User.username == username).first():
+                   username = f"{base}{secrets.randbelow(9000) + 1000}"
+               user = models.User(
+                   email=user_email,
+                   username=username,
+                   hashed_password=None,
+                   is_verified=True,
+               )
+               db.add(user)
+               db.commit()
+               db.refresh(user)
+       except SQLAlchemyError:
+           db.rollback()
+           logger.exception("Database error during sign-in")
+           raise HTTPException(status_code=503, detail="Could not sign you in right now. Please try again.")
 
-    except ValueError as e:
-        print(f"Google Auth Error: {e}")
-        raise HTTPException(status_code=400, detail="Invalid Google token")
-
+       access_token = auth.create_access_token(data={"sub": str(user.id)})
+       return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/users/me", response_model=schemas.UserResponse)
 def get_me(current_user: models.User = Depends(auth.get_current_user)):
@@ -198,12 +219,14 @@ def _watch_url(video_id: str) -> str:
 @app.get("/users/me/playlists", response_model=List[schemas.PlaylistResponse])
 def get_my_playlists(
     current_user: models.User = Depends(auth.get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    limit: int = 50
 ):
     rows = (
         db.query(models.SavedPlaylist)
         .filter(models.SavedPlaylist.user_id == current_user.id)
         .order_by(models.SavedPlaylist.created_at.desc())
+        .limit(min(limit,100))
         .all()
     )
     known = catalog.lookup_videos([v for p in rows for v in p.song_ids])
@@ -366,7 +389,14 @@ def make_playlist(
         parts.append(options.label(options.WEATHERS, weather))
     if genre != "any":
         parts.append(options.label(options.GENRES, genre))
+    if time_of_day and time_of_day not in options.ids(options.TIMES):
+        raise HTTPException(400, "Unknown time of day.")
+    if weather and weather not in options.ids(options.WEATHERS):
+        raise HTTPException(400, "Unknown weather.")
+    if genre != "any" and genre not in options.ids(options.GENRES):
+        raise HTTPException(400, "Unknown genre.")
 
+size = max(10, min(15, size))
     body = {
         "title": " · ".join(parts),
         "note": note,
@@ -379,7 +409,26 @@ def make_playlist(
             else None
         ),
     }
+    if user is not None:
+             _record_history(db, user, body["title"], mood, genre, weather, time_of_day, tracks)
     return JSONResponse(body, headers=NO_STORE)
+
+
+# Avatar upload
+
+contents = await file.read(MAX_FILE_SIZE + 1)     # never read more than 2 MB + 1 byte
+if len(contents) > MAX_FILE_SIZE:
+    raise HTTPException(400, "File exceeds 2MB limit")
+is_image = (
+    contents.startswith(b"\xff\xd8\xff")                      # JPEG
+    or contents.startswith(b"\x89PNG\r\n\x1a\n")              # PNG
+    or (contents[:4] == b"RIFF" and contents[8:12] == b"WEBP")  # WebP
+)
+if not is_image:
+    raise HTTPException(400, "That file isn't a valid image")
+
+
+
 
 
 @app.get("/healthz")

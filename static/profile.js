@@ -297,7 +297,7 @@ async function saveFromHistory(p, btn) {
         weather: p.weather,
         time_of_day: p.time_of_day,
         song_ids: songIds,
-        is_public: true,
+        is_public: false,
       }),
     });
     state.saved = await api("/users/me/playlists");
