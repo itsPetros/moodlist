@@ -300,10 +300,11 @@ async function saveFromHistory(p, btn) {
         is_public: false,
       }),
     });
+       const before = state.saved.length;
     state.saved = await api("/users/me/playlists");
     renderCounts();
     renderPanels();
-    toast("Saved to your library");
+    toast(state.saved.length === before ? "Already in your library" : "Saved to your library");
   } catch (err) {
     btn.disabled = false;
     toast(err.message);
