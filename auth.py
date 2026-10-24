@@ -1,6 +1,5 @@
 import os
-
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
@@ -22,9 +21,9 @@ oauth2_optional = OAuth2PasswordBearer(tokenUrl="/auth/google", auto_error=False
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -52,20 +51,3 @@ def get_current_user(
         raise credentials_exception
 
     return user
-
-
-def get_optional_user(
-    token: Optional[str] = Depends(oauth2_optional),
-    db: Session = Depends(get_db),
-) -> Optional[models.User]:
-    """Like get_current_user, but returns None instead of failing for signed-out visitors."""
-    if not token:
-        return None
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except JWTError:
-        return None
-    username = payload.get("sub")
-    if not username:
-        return None
-    return db.query(models.User).filter(models.User.username == username).first()
