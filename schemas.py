@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr,Field
 
 
 # --- USER SCHEMAS ---
@@ -20,12 +20,12 @@ class UserResponse(BaseModel):
 # --- PLAYLIST SCHEMAS ---
 
 class PlaylistCreate(BaseModel):
-    title: str
+    title: str = Field(min_length=1, max_length=100)
     mood: str
     genre: str
     weather: Optional[str] = None
     time_of_day: Optional[str] = None
-    song_ids: List[str]
+    song_ids: List[str] = Field(max_length=50)
     is_public: bool = True
 
 
