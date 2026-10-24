@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, Depends, HTTPException, status, Query, Request, File, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from google.oauth2 import id_token
 from google.auth.transport import requests
@@ -25,6 +26,7 @@ import youtube
 import models
 import schemas
 import auth
+import feedback
 from database import engine, Base, get_db
 
 load_dotenv()
@@ -52,6 +54,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="MoodList", lifespan=lifespan)
+app.include_router(feedback.router)
 
 app.mount("/static/profile_pics", StaticFiles(directory=UPLOAD_DIR), name="profile_pics")
 
@@ -236,7 +239,7 @@ def _watch_url(video_id: str) -> str:
 def get_my_playlists(
     current_user: models.User = Depends(auth.get_current_user),
     db: Session = Depends(get_db),
-    limit: int = 50
+    limit: int = Query(50, ge=1, le=100)
 ):
     rows = (
         db.query(models.SavedPlaylist)
@@ -389,7 +392,12 @@ def make_playlist(
     size = max(10, min(15, size))
 
     matched_only = catalog.ok_count() > 0
-    songs, note = catalog.pick_songs(mood, time_of_day, weather, genre, size, only_matched=matched_only)
+    liked, blocked = feedback.feedback_sets(db, user)
+    avoid = feedback.recent_song_keys(db, user)
+    songs, note = catalog.pick_songs(
+        mood, time_of_day, weather, genre, size,
+        only_matched=matched_only, avoid=avoid, liked=liked, blocked=blocked,
+    )
     if not songs:
         raise HTTPException(404, "No songs available for this choice yet.")
 
@@ -398,6 +406,7 @@ def make_playlist(
             "artist": s["artist"],
             "title": s["title"],
             "video_id": s["video_id"] if s["status"] == "ok" else None,
+            "feedback": 1 if catalog.song_key(s["artist"], s["title"]) in liked else 0,
             "search_url": "https://www.youtube.com/results?search_query="
             + quote_plus(f"{youtube.first_artist(s['artist'])} {s['title']} official"),
         }

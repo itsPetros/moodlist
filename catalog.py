@@ -159,17 +159,39 @@ def _first_artist(artist):
     return artist.split(" ft. ")[0].strip().lower()
 
 
-def pick_songs(mood, time=None, weather=None, genre="any", size=12, rng=None, only_matched=False):
+def song_key(artist, title):
+    """A stable identity for a song that does not depend on which YouTube video is attached
+    to it, so feedback and "already played" survive a video being replaced."""
+    return f"{artist.strip().lower()}|{title.strip().lower()}"
+
+
+# A song the person liked is this many times likelier to come up (it still has to fit the mood).
+LIKED_BOOST = 2.5
+
+
+def pick_songs(mood, time=None, weather=None, genre="any", size=12, rng=None, only_matched=False,
+               avoid=None, liked=None, blocked=None):
     """Return (songs, note). Weighted random, max 2 songs per artist.
     With only_matched=True only songs that already have a YouTube video are used, so every
-    song returned can go into the YouTube playlist link (the list may then be shorter)."""
+    song returned can go into the YouTube playlist link (the list may then be shorter).
+
+    Optional personalisation, all sets of song_key(...) values:
+      blocked  songs the person disliked. Never returned.
+      avoid    songs they were given recently. Used only when there are not enough other songs.
+      liked    songs they liked. Likelier to be picked (LIKED_BOOST)."""
     rng = rng or random
+    avoid, liked, blocked = avoid or set(), liked or set(), blocked or set()
     where = "status = 'ok'" if only_matched else "status != 'failed'"
     with db() as con:
         rows = [dict(r) for r in con.execute(f"SELECT * FROM songs WHERE {where}")]
 
+    for r in rows:
+        r["_key"] = song_key(r["artist"], r["title"])
+
     pool, other_genres = [], []
     for r in rows:
+        if r["_key"] in blocked:
+            continue
         if mood not in r["moods"].split(","):
             continue
         if genre == "any" or r["genre"] == genre:
@@ -179,16 +201,30 @@ def pick_songs(mood, time=None, weather=None, genre="any", size=12, rng=None, on
 
     def ranked(songs, extra):
         # Weighted random order (Efraimidis-Spirakis): higher weight -> likelier to come first.
-        keyed = ((rng.random() ** (1.0 / _weight(r, time, weather)), r, extra) for r in songs)
+        def weight(r):
+            w = _weight(r, time, weather)
+            return w * LIKED_BOOST if r["_key"] in liked else w
+
+        keyed = ((rng.random() ** (1.0 / weight(r)), r, extra) for r in songs)
         return sorted(keyed, key=lambda x: x[0], reverse=True)
 
     def tiered(songs, extra):
-        # Songs that already have a matched YouTube video come first, so as many songs as
-        # possible end up in the "Open as YouTube playlist" link. Songs without a video
-        # only fill the gaps. Within each group the choice is random, weighted by time/weather.
-        return ranked([s for s in songs if s["status"] == "ok"], extra) + ranked(
-            [s for s in songs if s["status"] != "ok"], extra
-        )
+        # Order of preference, each group shuffled by weight:
+        #   1. songs with a matched YouTube video that were not played recently
+        #   2. matched songs that were played recently (only when 1 runs out)
+        #   3. songs without a video, not recent
+        #   4. songs without a video, recent
+        # Matched songs come first so as many songs as possible end up in the
+        # "Open as YouTube playlist" link.
+        groups = []
+        for matched in (True, False):
+            part = [s for s in songs if (s["status"] == "ok") == matched]
+            groups.append([s for s in part if s["_key"] not in avoid])
+            groups.append([s for s in part if s["_key"] in avoid])
+        out = []
+        for g in groups:
+            out += ranked(g, extra)
+        return out
 
     # Songs of the chosen genre come first; other genres are only used if the list is still short.
     keyed = tiered(pool, False) + tiered(other_genres, True)
@@ -203,6 +239,9 @@ def pick_songs(mood, time=None, weather=None, genre="any", size=12, rng=None, on
         used_extra = used_extra or extra
         if len(picked) >= size:
             break
+
+    for r in picked:
+        r.pop("_key", None)
 
     note = None
     if used_extra:
@@ -231,6 +270,22 @@ def lookup_videos(video_ids):
             if vid in wanted and vid not in found:
                 found[vid] = {"artist": r["artist"], "title": r["title"]}
     return found
+
+def find_song_by_video(video_id):
+    """Return {"artist", "title"} for a video id (current or replaced), or None."""
+    if not video_id:
+        return None
+    with db() as con:
+        rows = con.execute(
+            "SELECT artist, title, video_id, bad_ids FROM songs "
+            "WHERE video_id = ? OR (',' || bad_ids || ',') LIKE ?",
+            (video_id, f"%,{video_id},%"),
+        ).fetchall()
+    for r in rows:  # LIKE treats "_" as a wildcard, so confirm the exact id
+        if r["video_id"] == video_id or video_id in r["bad_ids"].split(","):
+            return {"artist": r["artist"], "title": r["title"]}
+    return None
+
 
 def pending(limit=None, include_failed=False):
     statuses = ("pending", "failed") if include_failed else ("pending",)

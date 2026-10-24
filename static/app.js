@@ -234,7 +234,9 @@ function buildRow(track) {
 
   const a = document.createElement("a");
   a.className = "track is-link";
-  a.href = track.search_url;
+  a.href = track.video_id
+    ? "https://www.youtube.com/watch?v=" + encodeURIComponent(track.video_id)
+    : track.search_url;
   a.target = "_blank";
   a.rel = "noopener noreferrer";
 
@@ -252,7 +254,83 @@ function buildRow(track) {
   textDiv.append(titleSpan, artistSpan);
   a.append(textDiv);
   li.append(a);
+  if (track.video_id) li.append(buildFeedback(li, track));
   return li;
+}
+
+/* ------------------------------------------------ Thumbs up / thumbs down */
+
+function feedbackButton(emoji, label) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "fb-btn";
+  button.textContent = emoji;
+  button.setAttribute("aria-label", label);
+  button.title = label;
+  return button;
+}
+
+function buildFeedback(li, track) {
+  track.feedback = track.feedback || 0;
+  const wrap = document.createElement("div");
+  wrap.className = "fb";
+  const up = feedbackButton("👍", "I like this song");
+  const down = feedbackButton("👎", "Don't play this song again");
+
+  const paint = () => {
+    up.setAttribute("aria-pressed", String(track.feedback === 1));
+    down.setAttribute("aria-pressed", String(track.feedback === -1));
+    li.classList.toggle("is-disliked", track.feedback === -1);
+    updateYoutubeLink();
+  };
+
+  async function send(value) {
+    const previous = track.feedback;
+    const next = previous === value ? 0 : value; // tapping again takes it back
+    track.feedback = next;
+    paint();
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({ video_id: track.video_id, value: next }),
+      });
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
+      if (!res.ok) throw new Error("save failed");
+      if (next === -1) toast("Got it. We won't play this song again.");
+    } catch {
+      track.feedback = previous;
+      paint();
+      toast("Couldn't save that. Please try again.");
+    }
+  }
+
+  up.addEventListener("click", () => send(1));
+  down.addEventListener("click", () => send(-1));
+  paint();
+  wrap.append(up, down);
+  return wrap;
+}
+
+// The YouTube link only contains songs the person hasn't thumbs-downed.
+function updateYoutubeLink() {
+  const link = $("#yt-link");
+  if (!link) return;
+  const ids = state.tracks
+    .filter((t) => t.video_id && t.feedback !== -1)
+    .map((t) => t.video_id)
+    .slice(0, 50);
+  const total = state.tracks.length;
+  link.hidden = ids.length < 2;
+  if (ids.length < 2) return;
+  link.href = "https://www.youtube.com/watch_videos?video_ids=" + ids.join(",");
+  link.textContent =
+    ids.length < total
+      ? `Open ${ids.length} of ${total} songs as a YouTube playlist ↗`
+      : `Open all ${total} songs as a YouTube playlist ↗`;
 }
 
 function renderResult(data) {
@@ -266,19 +344,10 @@ function renderResult(data) {
   note.textContent = data.note || "";
   note.hidden = !data.note;
 
-  const link = $("#yt-link");
-  link.hidden = !data.youtube_playlist_url;
-  if (data.youtube_playlist_url) {
-    link.href = data.youtube_playlist_url;
-    link.textContent =
-      data.playlist_count < data.total
-        ? `Open ${data.playlist_count} of ${data.total} songs as a YouTube playlist ↗`
-        : `Open all ${data.total} songs as a YouTube playlist ↗`;
-  }
-
   const list = $("#tracks");
   list.textContent = "";
   state.tracks.forEach((track) => list.append(buildRow(track)));
+  updateYoutubeLink();
 
   if (window.matchMedia("(max-width: 899px)").matches) {
     $("#right").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -288,7 +357,7 @@ function renderResult(data) {
 window.saveCurrentPlaylist = async function() {
   const title = $("#playlist-title-input").value.trim() || "My MoodList Playlist";
   const isPublic = $("#playlist-public-checkbox").checked;
-  const songIds = state.tracks.map(t => t.video_id).filter(Boolean);
+  const songIds = state.tracks.filter(t => t.feedback !== -1).map(t => t.video_id).filter(Boolean);
 
   if (!songIds.length) {
     alert("No valid track IDs to save.");
