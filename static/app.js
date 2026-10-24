@@ -3,7 +3,7 @@
 const $ = (sel) => document.querySelector(sel);
 const TOKEN_KEY = "moodlist_jwt_token";
 
-const state = { mood: null, time: null, weather: null, genre: "any", tracks: [] };
+const state = { mood: null, time: null, weather: null, genre: "any", tracks: [], options: null, weatherTried: false };
 
 function getAuthHeaders() {
   const token = localStorage.getItem(TOKEN_KEY);
@@ -153,7 +153,7 @@ function timeOfDay(hour) {
   return "night";
 }
 
-function buildChips(container, items, key, optional) {
+function buildChips(container, items, key, optional, onChange) {
   if (!container) return;
   container.textContent = "";
   for (const item of items) {
@@ -175,6 +175,7 @@ function buildChips(container, items, key, optional) {
         chip.setAttribute("aria-pressed", String(chip.dataset.id === state[key]));
       }
       updateCta();
+      if (onChange) onChange();
     });
     container.append(button);
   }
@@ -192,15 +193,154 @@ async function loadOptions() {
   try {
     const res = await fetch("/api/options");
     const options = await res.json();
+    state.options = options;
     state.time = timeOfDay(new Date().getHours());
     buildChips($("#g-mood"), options.moods, "mood", false);
     buildChips($("#g-time"), options.times, "time", true);
-    buildChips($("#g-weather"), options.weathers, "weather", true);
+    buildChips($("#g-weather"), options.weathers, "weather", true, () => setWeatherHint(""));
     buildChips($("#g-genre"), options.genres, "genre", false);
     updateCta();
+    startAutoWeather();
   } catch {
     showError("Couldn't load options.");
   }
+}
+
+/* ------------------------------------------------ Automatic weather */
+/* The browser's location is turned into a weather type here, in the browser. Only a rounded
+   location (about 1 km) is sent, and only to the weather service, never to MoodList. */
+
+const WEATHER_AUTO_KEY = "moodlist_auto_weather"; // "1" once the person has allowed location
+const WEATHER_CACHE_KEY = "moodlist_weather_cache";
+const WEATHER_TTL_MS = 20 * 60 * 1000;
+
+// WMO weather codes (used by Open-Meteo) -> the weather types this app has.
+function weatherFromCode(code, isDay) {
+  if (code === 0 || code === 1) return isDay ? "sunny" : null; // a clear night has no matching type
+  if (code === 2 || code === 3 || code === 45 || code === 48) return "cloudy";
+  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || (code >= 95 && code <= 99)) return "rainy";
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return "snowy";
+  return null;
+}
+
+function storageGet(store, key) {
+  try { return window[store].getItem(key); } catch { return null; }
+}
+function storageSet(store, key, value) {
+  try { window[store].setItem(key, value); } catch { /* storage can be blocked; that's fine */ }
+}
+function storageRemove(store, key) {
+  try { window[store].removeItem(key); } catch { /* ignore */ }
+}
+
+function setWeatherHint(text) {
+  const el = $("#weather-hint");
+  if (el) el.textContent = text || "";
+}
+
+function applyWeather(id, isDay) {
+  state.weather = id;
+  const container = $("#g-weather");
+  if (container) {
+    for (const chip of container.children) {
+      chip.setAttribute("aria-pressed", String(chip.dataset.id === id));
+    }
+  }
+  const info = id && state.options && state.options.weathers.find((w) => w.id === id);
+  if (info) setWeatherHint(`${info.emoji} ${info.label} near you. Tap a weather to change it.`);
+  else setWeatherHint(isDay === false ? "🌙 Clear night near you. Pick a weather if you like." : "Couldn't match the weather. Pick one if you like.");
+}
+
+function getPosition() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject({ code: "unsupported" });
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: false,
+      timeout: 8000,
+      maximumAge: 30 * 60 * 1000,
+    });
+  });
+}
+
+async function fetchCurrentWeather(lat, lon) {
+  const url =
+    "https://api.open-meteo.com/v1/forecast?latitude=" + lat.toFixed(2) +
+    "&longitude=" + lon.toFixed(2) + "&current=weather_code,is_day&timezone=auto";
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) throw new Error("weather request failed");
+    const data = await res.json();
+    return { code: data.current.weather_code, isDay: data.current.is_day === 1 };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function cachedWeather() {
+  try {
+    const cached = JSON.parse(storageGet("sessionStorage", WEATHER_CACHE_KEY) || "null");
+    if (cached && Date.now() - cached.at < WEATHER_TTL_MS) return cached;
+  } catch { /* bad cache: ignore */ }
+  return null;
+}
+
+// auto=true: runs without a click, so it never overrides a choice the person already made.
+async function detectWeather(auto) {
+  const button = $("#detect-weather");
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Detecting…";
+  }
+  try {
+    let result = cachedWeather();
+    if (!result) {
+      const position = await getPosition();
+      const weather = await fetchCurrentWeather(position.coords.latitude, position.coords.longitude);
+      result = { at: Date.now(), weather: weatherFromCode(weather.code, weather.isDay), isDay: weather.isDay };
+      storageSet("sessionStorage", WEATHER_CACHE_KEY, JSON.stringify(result));
+    }
+    storageSet("localStorage", WEATHER_AUTO_KEY, "1");
+    if (!auto || state.weather === null) applyWeather(result.weather, result.isDay);
+  } catch (err) {
+    if (err && err.code === 1) {
+      storageRemove("localStorage", WEATHER_AUTO_KEY);
+      if (!auto) setWeatherHint("Location is blocked. You can pick the weather yourself.");
+    } else if (!auto) {
+      setWeatherHint(
+        err && err.code === "unsupported"
+          ? "This browser can't share a location. Pick the weather yourself."
+          : "Couldn't get the weather right now. Pick it yourself."
+      );
+    }
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "📍 Detect my weather";
+    }
+  }
+}
+
+// On later visits, detect on its own, but only if location is already allowed, so there is
+// never a surprise permission pop-up.
+async function startAutoWeather() {
+  const button = $("#detect-weather");
+  if (button && !button.dataset.wired) {
+    button.dataset.wired = "1";
+    button.addEventListener("click", () => detectWeather(false));
+    if (!navigator.geolocation) button.hidden = true;
+  }
+  if (state.weatherTried || !navigator.geolocation) return;
+  state.weatherTried = true;
+  if (storageGet("localStorage", WEATHER_AUTO_KEY) !== "1") return;
+  try {
+    const permission = await navigator.permissions.query({ name: "geolocation" });
+    if (permission.state === "granted") detectWeather(true);
+  } catch { /* the Permissions API is missing in some browsers: wait for a tap */ }
 }
 
 async function generate() {

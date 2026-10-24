@@ -62,6 +62,11 @@
       <fieldset class="group">
         <legend>Weather <span class="optional">optional</span></legend>
         <div class="chips" id="g-weather" role="group" aria-label="Weather"></div>
+        <div class="auto-row">
+          <button type="button" id="detect-weather" class="link-btn"
+                  title="Uses your browser's location. A rounded location (about 1 km) goes to the weather service, never to MoodList.">📍 Detect my weather</button>
+          <span id="weather-hint" class="auto-hint" role="status" aria-live="polite"></span>
+        </div>
       </fieldset>
 
       <fieldset class="group">
@@ -73,6 +78,7 @@
         <button type="button" id="go" class="primary" disabled>Create playlist</button>
         <p id="hint" class="hint">Pick a mood to start</p>
       </div>
+      <p class="credit">Weather data by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo.com</a></p>
     </section>
 
     <section class="panel panel-right" id="right" aria-label="Your playlist">
